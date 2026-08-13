@@ -1,0 +1,45 @@
+<idea-plugin>
+    <id>com.hans.git-merge-into-plus</id>
+    <name>Git Merge Into Plus</name>
+    <vendor>hans</vendor>
+    <version>0.1.0</version>
+
+    <description><![CDATA[
+        Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
+        switches back to the current branch when the operation finishes.
+        <br/><br/>
+        Features:
+        <ul>
+            <li>Searchable target-branch picker (great for repos with many branches)</li>
+            <li>Mark frequently used branches as <b>favorites</b> (star them) — they are pinned to the top</li>
+            <li>Remembers the last target branch per repository</li>
+            <li>Optional <code>--no-ff</code> merge commit and optional push of the target branch</li>
+            <li>Always restores the original (current) branch after the merge, even on failure</li>
+        </ul>
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <ul>
+            <li>0.1.0: initial version</li>
+        </ul>
+    ]]></change-notes>
+
+    <idea-version since-build="261.0" until-build="263.*"/>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.vcs</depends>
+    <depends>Git4Idea</depends>
+
+    <projectService serviceImplementation="com.hans.gitmergeintoplus.settings.FavoritesManager"/>
+
+    <actions>
+        <action id="gitmergeintoplus.MergeInto"
+                class="com.hans.gitmergeintoplus.MergeIntoAction"
+                text="Merge Into..."
+                description="Merge current branch into a selected branch and stay on the current branch">
+            <add-to-group group-id="Git.Menu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift M"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt shift M"/>
+        </action>
+    </actions>
+</idea-plugin>

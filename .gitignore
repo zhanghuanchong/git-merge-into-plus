@@ -5,6 +5,7 @@ build/
 # IntelliJ
 .idea/
 .intellijPlatform
+.kotlin/
 *.iml
 out/
 

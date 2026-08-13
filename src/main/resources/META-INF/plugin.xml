@@ -42,7 +42,9 @@
                 class="com.hans.gitmergeintoplus.MergeIntoAction"
                 text="Merge Into..."
                 description="Merge current branch into a selected branch and stay on the current branch">
+            <add-to-group group-id="Git.MainMenu" anchor="last"/>
             <add-to-group group-id="Git.Menu" anchor="last"/>
+            <add-to-group group-id="Git.ContextMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift M"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt shift M"/>
         </action>

@@ -17,9 +17,7 @@ class MergeIntoAction : AnAction() {
 
     override fun update(e: AnActionEvent) {
         val project = e.project
-        val available = project != null && !project.isDisposed &&
-            GitRepositoryManager.getInstance(project).repositories.isNotEmpty()
-        e.presentation.isEnabledAndVisible = available
+        e.presentation.isEnabled = project != null && !project.isDisposed
     }
 
     override fun actionPerformed(e: AnActionEvent) {

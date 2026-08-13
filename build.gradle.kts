@@ -1,6 +1,7 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij") version "1.17.4"
+    id("org.jetbrains.kotlin.jvm") version "2.3.21"
+    id("org.jetbrains.intellij.platform") version "2.18.1"
 }
 
 group = "com.hans"
@@ -8,29 +9,36 @@ version = "0.1.0"
 
 repositories {
     mavenCentral()
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-intellij {
-    version.set("2026.2")
-    type.set("IC")
-    plugins.set(listOf("Git4Idea"))
-    updateSinceUntilBuild.set(false)
-}
-
-tasks {
-    buildSearchableOptions {
-        enabled = false
+    intellijPlatform {
+        defaultRepositories()
     }
-    patchPluginXml {
-        sinceBuild.set("261.0")
-        untilBuild.set("263.*")
+}
+
+dependencies {
+    intellijPlatform {
+        intellijIdea("2026.2")
+        bundledPlugin("Git4Idea")
+        bundledModule("intellij.platform.vcs.dvcs")
+        bundledModule("intellij.platform.vcs.dvcs.impl")
+        bundledModule("intellij.platform.vcs.dvcs.impl.shared")
+        bundledModule("intellij.platform.vcs.impl")
+        bundledModule("intellij.platform.vcs.impl.shared")
+        bundledModule("intellij.platform.vcs.log")
+        bundledModule("intellij.platform.vcs.log.graph.impl")
+        bundledModule("intellij.platform.vcs.log.impl")
+        bundledModule("intellij.vcs.git.shared")
     }
-    publishPlugin {
-        token.set(System.getenv("JETBRAINS_TOKEN"))
+}
+
+intellijPlatform {
+    buildSearchableOptions = false
+    pluginConfiguration {
+        id = "com.hans.git-merge-into-plus"
+        name = "Git Merge Into Plus"
+        version = "0.1.0"
+        ideaVersion {
+            sinceBuild = "261.0"
+            untilBuild = "263.*"
+        }
     }
 }

@@ -32,6 +32,10 @@
 
     <projectService serviceImplementation="com.hans.gitmergeintoplus.settings.FavoritesManager"/>
 
+    <notification-group id="gitmergeintoplus.notifications"
+                        displayType="BALLOON"
+                        isLogByDefault="true"/>
+
     <actions>
         <action id="gitmergeintoplus.MergeInto"
                 class="com.hans.gitmergeintoplus.MergeIntoAction"

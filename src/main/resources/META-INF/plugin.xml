@@ -30,18 +30,21 @@
     <depends>com.intellij.modules.vcs</depends>
     <depends>Git4Idea</depends>
 
-    <projectService serviceImplementation="com.hans.gitmergeintoplus.settings.FavoritesManager"/>
-
-    <notification-group id="gitmergeintoplus.notifications"
-                        displayType="BALLOON"
-                        isLogByDefault="true"/>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="com.hans.gitmergeintoplus.settings.FavoritesManager"/>
+        <notification-group id="gitmergeintoplus.notifications"
+                            displayType="BALLOON"
+                            isLogByDefault="true"/>
+    </extensions>
 
     <actions>
         <action id="gitmergeintoplus.MergeInto"
                 class="com.hans.gitmergeintoplus.MergeIntoAction"
                 text="Merge Into..."
                 description="Merge current branch into a selected branch and stay on the current branch">
+            <add-to-group group-id="Git.MainMenu" anchor="last"/>
             <add-to-group group-id="Git.Menu" anchor="last"/>
+            <add-to-group group-id="Git.ContextMenu" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift M"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt shift M"/>
         </action>

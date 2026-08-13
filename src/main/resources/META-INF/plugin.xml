@@ -30,11 +30,12 @@
     <depends>com.intellij.modules.vcs</depends>
     <depends>Git4Idea</depends>
 
-    <projectService serviceImplementation="com.hans.gitmergeintoplus.settings.FavoritesManager"/>
-
-    <notification-group id="gitmergeintoplus.notifications"
-                        displayType="BALLOON"
-                        isLogByDefault="true"/>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="com.hans.gitmergeintoplus.settings.FavoritesManager"/>
+        <notification-group id="gitmergeintoplus.notifications"
+                            displayType="BALLOON"
+                            isLogByDefault="true"/>
+    </extensions>
 
     <actions>
         <action id="gitmergeintoplus.MergeInto"

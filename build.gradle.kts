@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.3.21"
@@ -27,7 +29,14 @@ dependencies {
         bundledModule("intellij.platform.vcs.log.graph.impl")
         bundledModule("intellij.platform.vcs.log.impl")
         bundledModule("intellij.vcs.git.shared")
+        testFramework(TestFrameworkType.Platform)
+        testFramework(TestFrameworkType.Plugin.Java)
     }
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+    testImplementation(kotlin("test"))
 }
 
 intellijPlatform {

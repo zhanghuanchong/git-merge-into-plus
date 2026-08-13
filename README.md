@@ -36,7 +36,7 @@ Rebind it anytime in **Settings → Keymap**.
 1. Build the plugin:
 
    ```bash
-   gradle buildPlugin
+   ./gradlew buildPlugin
    ```
 
 2. Install `build/distributions/git-merge-into-plus-*.zip` via
@@ -45,7 +45,7 @@ Rebind it anytime in **Settings → Keymap**.
 Or run it directly in a test IDE:
 
 ```bash
-gradle runIde
+./gradlew runIde
 ```
 
 ## Usage
@@ -67,7 +67,7 @@ gradle runIde
 ## Development
 
 ```bash
-gradle verifyPlugin   # validate plugin.xml
-gradle build          # compile + package
-gradle runIde         # launch a test IDE with this plugin
+./gradlew verifyPlugin   # validate plugin.xml
+./gradlew build          # compile + test + package
+./gradlew runIde         # launch a test IDE with this plugin
 ```

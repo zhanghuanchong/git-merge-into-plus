@@ -53,5 +53,6 @@ the current branch. Written in **Kotlin**.
 - Upon completing any feature upgrade or bug fix:
   - Bump the version number in `build.gradle.kts` and `src/main/resources/META-INF/plugin.xml`.
   - Update Overview (`<description>`) if features changed, and What's New (`<change-notes>`) in `src/main/resources/META-INF/plugin.xml`.
+  - Verify with `./gradlew test` (or at least `./gradlew compileKotlin`) after edits.
   - Re-package via `./gradlew buildPlugin`.
-- Verify with `./gradlew test` (or at least `./gradlew compileKotlin`) after edits before reporting done.
+  - Commit all changes with a clear commit message and push to remote (`git push`).

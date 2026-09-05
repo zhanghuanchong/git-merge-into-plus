@@ -11,6 +11,7 @@ import com.intellij.ui.SearchTextField
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextField
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import git4idea.GitLocalBranch
@@ -64,6 +65,10 @@ class MergeIntoDialog(
 
     private val infoLabel = JBLabel()
     private val searchField = SearchTextField()
+    private val branchCountLabel = JBLabel().apply {
+        font = font.deriveFont(font.size2D - 1f)
+        foreground = UIUtil.getContextHelpForeground()
+    }
     private val model = DefaultListModel<BranchItem>()
     private val branchList = JBList(model)
     private val commitSummaryCache = ConcurrentHashMap<Pair<String, String>, BranchCommitSummary>()
@@ -72,6 +77,10 @@ class MergeIntoDialog(
         font = font.deriveFont(font.size2D - 1f)
     }
     private val noFFCheckBox = JCheckBox("Create a merge commit (--no-ff)", favorites.isNoFF())
+    private val commitMessageField = JBTextField().apply {
+        emptyText.text = "Optional commit message (e.g. Merge feat/login into dev (#1024))"
+        isEnabled = favorites.isNoFF()
+    }
     private val pushCheckBox = JCheckBox("Push target branch after merging", favorites.isPushAfterMerge())
 
     private var selectedRepository: GitRepository = defaultRepository
@@ -116,7 +125,11 @@ class MergeIntoDialog(
             }
         })
         searchField.toolTipText = "Search branches by name"
-        panel.add(searchField, gbc)
+        val searchPanel = JPanel(BorderLayout(JBUI.scale(8), 0)).apply {
+            add(searchField, BorderLayout.CENTER)
+            add(branchCountLabel, BorderLayout.EAST)
+        }
+        panel.add(searchPanel, gbc)
 
         gbc.gridy = 3
         gbc.weighty = 1.0
@@ -146,8 +159,24 @@ class MergeIntoDialog(
             fill = GridBagConstraints.HORIZONTAL
             insets = JBUI.insets(0, 0, 2, 0)
         }
+        noFFCheckBox.addActionListener {
+            commitMessageField.isEnabled = noFFCheckBox.isSelected
+        }
         left.add(noFFCheckBox, oc)
+
         oc.gridy = 1
+        oc.insets = JBUI.insets(2, 22, 4, 0)
+        val commitMsgPanel = JPanel(BorderLayout(JBUI.scale(6), 0)).apply {
+            add(JBLabel("Commit message:").apply {
+                foreground = UIUtil.getContextHelpForeground()
+                font = font.deriveFont(font.size2D - 1f)
+            }, BorderLayout.WEST)
+            add(commitMessageField, BorderLayout.CENTER)
+        }
+        left.add(commitMsgPanel, oc)
+
+        oc.gridy = 2
+        oc.insets = JBUI.insets(2, 0, 2, 0)
         left.add(pushCheckBox, oc)
         options.add(left, BorderLayout.CENTER)
         panel.add(options, gbc)
@@ -220,6 +249,23 @@ class MergeIntoDialog(
 
         val previousSelection = getSelectedBranch()
         model.clear()
+
+        val totalBranches = selectedRepository.branches.localBranches.count { it.name != currentBranchName }
+        val totalFavorites = selectedRepository.branches.localBranches.count {
+            it.name != currentBranchName && favorites.isFavorite(repoPath, it.name)
+        }
+        val matchedBranches = favoriteNames.size + otherNames.size
+        val matchedFavorites = favoriteNames.size
+
+        if (filter.isEmpty()) {
+            val favSuffix = if (totalFavorites > 0) " · $totalFavorites ★" else ""
+            val branchWord = if (totalBranches == 1) "branch" else "branches"
+            branchCountLabel.text = "$totalBranches $branchWord$favSuffix"
+        } else {
+            val favSuffix = if (matchedFavorites > 0) " ($matchedFavorites ★)" else ""
+            val branchWord = if (totalBranches == 1) "branch" else "branches"
+            branchCountLabel.text = "$matchedBranches / $totalBranches $branchWord$favSuffix"
+        }
 
         if (favoriteNames.isNotEmpty()) {
             model.addElement(BranchItem.header(favoriteNames.size.toString() + " favorite" +
@@ -486,6 +532,17 @@ class MergeIntoDialog(
     fun isNoFF(): Boolean = noFFCheckBox.isSelected
 
     fun isPushAfterMerge(): Boolean = pushCheckBox.isSelected
+
+    fun getCustomCommitMessage(): String? {
+        if (!isNoFF()) return null
+        return commitMessageField.text.trim().takeIf { it.isNotEmpty() }
+    }
+
+    fun getBranchCountText(): String = branchCountLabel.text
+
+    fun setCommitMessage(text: String) {
+        commitMessageField.text = text
+    }
 
     override fun doOKAction() {
         favorites.setNoFF(isNoFF())

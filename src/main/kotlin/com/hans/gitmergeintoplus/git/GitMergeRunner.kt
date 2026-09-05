@@ -20,6 +20,10 @@ object GitMergeRunner {
 
     private val LOG = Logger.getInstance(GitMergeRunner::class.java)
 
+    fun resolveCommitMessage(currentBranch: String, targetBranch: String, customMessage: String?): String {
+        return customMessage?.trim()?.takeIf { it.isNotEmpty() } ?: "Merge branch '$currentBranch' into $targetBranch"
+    }
+
     fun run(
         project: Project,
         repository: GitRepository,
@@ -27,13 +31,14 @@ object GitMergeRunner {
         targetBranch: String,
         noFF: Boolean,
         push: Boolean,
+        customCommitMessage: String? = null,
     ) {
         ProgressManager.getInstance().run(object :
             Task.Backgroundable(project, "Merge '$currentBranch' into '$targetBranch'", false) {
             override fun run(indicator: ProgressIndicator) {
                 indicator.isIndeterminate = true
                 indicator.text = "Preparing merge..."
-                perform(project, repository, currentBranch, targetBranch, noFF, push, indicator)
+                perform(project, repository, currentBranch, targetBranch, noFF, push, customCommitMessage, indicator)
             }
         })
     }
@@ -45,6 +50,7 @@ object GitMergeRunner {
         targetBranch: String,
         noFF: Boolean,
         push: Boolean,
+        customCommitMessage: String?,
         indicator: ProgressIndicator,
     ) {
         val root = repository.root
@@ -73,7 +79,7 @@ object GitMergeRunner {
             val mergeArgs = buildList {
                 if (noFF) add("--no-ff")
                 add("-m")
-                add("Merge branch '$currentBranch' into $targetBranch")
+                add(resolveCommitMessage(currentBranch, targetBranch, customCommitMessage))
                 add(currentBranch)
             }
             val merge = runCommand(project, root, GitCommand.MERGE, mergeArgs)

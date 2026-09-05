@@ -54,8 +54,10 @@ class MergeIntoAction : AnAction() {
         favManager.setNoFF(dialog.isNoFF())
         favManager.setPushAfterMerge(dialog.isPushAfterMerge())
 
-        GitMergeRunner.run(project, repository, currentBranch, targetBranch,
-            dialog.isNoFF(), dialog.isPushAfterMerge())
+        GitMergeRunner.run(
+            project, repository, currentBranch, targetBranch,
+            dialog.isNoFF(), dialog.isPushAfterMerge(), dialog.getCustomCommitMessage()
+        )
     }
 
     private fun resolveDefaultRepository(

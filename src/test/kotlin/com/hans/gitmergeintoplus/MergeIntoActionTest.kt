@@ -43,5 +43,25 @@ class MergeIntoActionTest : BasePlatformTestCase() {
         val loadReason = com.intellij.ide.plugins.DynamicPlugins.validateCanLoadWithoutRestart(descriptor)
         assertNull("plugin should be loadable without restart, but failed: $loadReason", loadReason)
     }
+
+    fun testResolveCommitMessageDefaultWhenNullOrBlank() {
+        val defaultMsg = com.hans.gitmergeintoplus.git.GitMergeRunner.resolveCommitMessage("feat/login", "dev", null)
+        assertEquals("Merge branch 'feat/login' into dev", defaultMsg)
+
+        val blankMsg = com.hans.gitmergeintoplus.git.GitMergeRunner.resolveCommitMessage("feat/login", "dev", "   ")
+        assertEquals("Merge branch 'feat/login' into dev", blankMsg)
+    }
+
+    fun testResolveCommitMessageCustom() {
+        val custom = com.hans.gitmergeintoplus.git.GitMergeRunner.resolveCommitMessage(
+            "feat/login", "dev", "Merge feat/login into dev (#1024)"
+        )
+        assertEquals("Merge feat/login into dev (#1024)", custom)
+
+        val trimmed = com.hans.gitmergeintoplus.git.GitMergeRunner.resolveCommitMessage(
+            "feat/login", "dev", "  Merge feat/login into dev (#1024)  "
+        )
+        assertEquals("Merge feat/login into dev (#1024)", trimmed)
+    }
 }
 

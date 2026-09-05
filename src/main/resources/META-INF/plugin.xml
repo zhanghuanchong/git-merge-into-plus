@@ -2,7 +2,7 @@
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
     <vendor>Hans Zhang</vendor>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
@@ -12,8 +12,10 @@
         <ul>
             <li><b>Official Plugin Branding:</b> Modern SVG plugin icons for light and dark IDE themes.</li>
             <li><b>Searchable Branch Picker:</b> Quickly filter and pick target branches, ideal for repositories with many branches.</li>
+            <li><b>Real-Time Branch Counter:</b> Live badge displaying branch totals, favorite stars, and dynamic match counts as you filter.</li>
             <li><b>Favorites Pinned to Top:</b> Star frequently merged branches to keep them pinned at the top of the list.</li>
             <li><b>Target Branch Commit Preview:</b> Instant preview of the latest commit (hash, author, date, subject) on any selected target branch.</li>
+            <li><b>Custom Merge Commit Message:</b> Specify an optional custom commit message when <code>--no-ff</code> is enabled; falls back to Git standard message if left blank.</li>
             <li><b>Smart Memory:</b> Remembers the last merged target branch for each repository.</li>
             <li><b>Persistent Options:</b> Remembers your <code>--no-ff</code> (create merge commit) and <code>push</code> preferences across invocations (both enabled by default).</li>
             <li><b>Safe Checkout-Back:</b> Automatically switches back to your original branch after merge, even if an error or conflict occurs.</li>
@@ -22,6 +24,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.1.5</h4>
+        <ul>
+            <li><b>Custom Merge Commit Message:</b> Added an optional commit message input field activated when <code>--no-ff</code> is checked, supporting custom formats or falling back to Git defaults.</li>
+            <li><b>Real-Time Branch Counter & Fast Filter:</b> Displays real-time branch and star counts in the search bar, updating dynamically as you filter.</li>
+        </ul>
         <h4>0.1.4</h4>
         <ul>
             <li><b>Official Plugin Branding:</b> Added official <code>pluginIcon.svg</code> and <code>pluginIcon_dark.svg</code> for the IDE Plugin Manager and JetBrains Marketplace.</li>

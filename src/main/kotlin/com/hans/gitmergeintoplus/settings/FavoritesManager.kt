@@ -11,6 +11,8 @@ class FavoritesManager : PersistentStateComponent<FavoritesManager.State> {
     class State {
         var favorites: MutableMap<String, MutableList<String>> = HashMap()
         var lastTargets: MutableMap<String, String> = HashMap()
+        var noFF: Boolean = true
+        var pushAfterMerge: Boolean = true
     }
 
     private var myState = State()
@@ -38,6 +40,18 @@ class FavoritesManager : PersistentStateComponent<FavoritesManager.State> {
 
     fun setLastTarget(repoPath: String, branchName: String) {
         myState.lastTargets[repoPath] = branchName
+    }
+
+    fun isNoFF(): Boolean = myState.noFF
+
+    fun setNoFF(value: Boolean) {
+        myState.noFF = value
+    }
+
+    fun isPushAfterMerge(): Boolean = myState.pushAfterMerge
+
+    fun setPushAfterMerge(value: Boolean) {
+        myState.pushAfterMerge = value
     }
 
     companion object {

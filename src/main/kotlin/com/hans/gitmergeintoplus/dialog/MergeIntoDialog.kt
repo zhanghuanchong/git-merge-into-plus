@@ -52,8 +52,8 @@ class MergeIntoDialog(
     private val searchField = SearchTextField()
     private val model = DefaultListModel<BranchItem>()
     private val branchList = JBList(model)
-    private val noFFCheckBox = JCheckBox("Create a merge commit (--no-ff)")
-    private val pushCheckBox = JCheckBox("Push target branch after merging")
+    private val noFFCheckBox = JCheckBox("Create a merge commit (--no-ff)", favorites.isNoFF())
+    private val pushCheckBox = JCheckBox("Push target branch after merging", favorites.isPushAfterMerge())
 
     private var selectedRepository: GitRepository = defaultRepository
     private var currentBranchName: String? = null
@@ -63,7 +63,6 @@ class MergeIntoDialog(
         setOKButtonText("Merge")
         init()
         updateForRepository()
-        getOKAction().isEnabled = false
     }
 
     data class BranchItem(val name: String, val header: Boolean, val favorite: Boolean) {
@@ -215,6 +214,7 @@ class MergeIntoDialog(
 
         selectBranch(previousSelection)
         branchList.repaint()
+        updateOkButton()
     }
 
     private fun selectBranch(branchName: String?) {
@@ -246,6 +246,10 @@ class MergeIntoDialog(
         if (e.valueIsAdjusting) {
             return
         }
+        updateOkButton()
+    }
+
+    private fun updateOkButton() {
         val item = branchList.selectedValue
         val valid = item != null && !item.header
         getOKAction().isEnabled = valid && currentBranchName != null
@@ -293,7 +297,7 @@ class MergeIntoDialog(
 
             if (e.clickCount == 2 && !inStarZone && SwingUtilities.isLeftMouseButton(e)) {
                 if (getOKAction().isEnabled) {
-                    close(OK_EXIT_CODE)
+                    doOKAction()
                 }
                 return
             }
@@ -364,6 +368,12 @@ class MergeIntoDialog(
     fun isNoFF(): Boolean = noFFCheckBox.isSelected
 
     fun isPushAfterMerge(): Boolean = pushCheckBox.isSelected
+
+    override fun doOKAction() {
+        favorites.setNoFF(isNoFF())
+        favorites.setPushAfterMerge(isPushAfterMerge())
+        super.doOKAction()
+    }
 
     override fun getPreferredFocusedComponent(): JComponent? = searchField
 }

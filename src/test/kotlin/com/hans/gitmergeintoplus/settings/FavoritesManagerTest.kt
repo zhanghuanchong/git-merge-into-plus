@@ -14,4 +14,28 @@ class FavoritesManagerTest : BasePlatformTestCase() {
         manager.toggleFavorite("/repo", "main")
         assertFalse(manager.isFavorite("/repo", "main"))
     }
+
+    fun testMergeOptionsDefaultToTrue() {
+        val manager = project.getService(FavoritesManager::class.java)
+        assertTrue(manager.isNoFF())
+        assertTrue(manager.isPushAfterMerge())
+    }
+
+    fun testMergeOptionsCanBeToggledAndPersisted() {
+        val manager = project.getService(FavoritesManager::class.java)
+        manager.setNoFF(false)
+        manager.setPushAfterMerge(false)
+        assertFalse(manager.isNoFF())
+        assertFalse(manager.isPushAfterMerge())
+
+        val state = manager.state
+        assertNotNull(state)
+        assertFalse(state!!.noFF)
+        assertFalse(state.pushAfterMerge)
+
+        val newManager = FavoritesManager()
+        newManager.loadState(state)
+        assertFalse(newManager.isNoFF())
+        assertFalse(newManager.isPushAfterMerge())
+    }
 }

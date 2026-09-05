@@ -49,4 +49,9 @@ the current branch. Written in **Kotlin**.
 
 - No code comments unless the task explicitly asks for them.
 - Keep the plugin dependency-light: only the IntelliJ platform + Git4Idea APIs.
+- Author / Vendor is **Hans Zhang**.
+- Upon completing any feature upgrade or bug fix:
+  - Bump the version number in `build.gradle.kts` and `src/main/resources/META-INF/plugin.xml`.
+  - Update Overview (`<description>`) if features changed, and What's New (`<change-notes>`) in `src/main/resources/META-INF/plugin.xml`.
+  - Re-package via `./gradlew buildPlugin`.
 - Verify with `./gradlew test` (or at least `./gradlew compileKotlin`) after edits before reporting done.

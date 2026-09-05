@@ -44,7 +44,10 @@ class MergeIntoAction : AnAction() {
         val currentBranch = dialog.getCurrentBranchName() ?: return
         val targetBranch = dialog.getSelectedBranch() ?: return
 
-        FavoritesManager.getInstance(project).setLastTarget(repository.root.path, targetBranch)
+        val favManager = FavoritesManager.getInstance(project)
+        favManager.setLastTarget(repository.root.path, targetBranch)
+        favManager.setNoFF(dialog.isNoFF())
+        favManager.setPushAfterMerge(dialog.isPushAfterMerge())
 
         GitMergeRunner.run(project, repository, currentBranch, targetBranch,
             dialog.isNoFF(), dialog.isPushAfterMerge())

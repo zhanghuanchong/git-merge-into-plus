@@ -19,28 +19,28 @@ class FavoritesManagerTest : BasePlatformTestCase() {
         val manager = project.getService(FavoritesManager::class.java)
         assertTrue(manager.isNoFF())
         assertTrue(manager.isPushAfterMerge())
-        assertFalse(manager.isPullBeforeMerge())
+        assertTrue(manager.isPullBeforeMerge())
     }
 
     fun testMergeOptionsCanBeToggledAndPersisted() {
         val manager = project.getService(FavoritesManager::class.java)
         manager.setNoFF(false)
         manager.setPushAfterMerge(false)
-        manager.setPullBeforeMerge(true)
+        manager.setPullBeforeMerge(false)
         assertFalse(manager.isNoFF())
         assertFalse(manager.isPushAfterMerge())
-        assertTrue(manager.isPullBeforeMerge())
+        assertFalse(manager.isPullBeforeMerge())
 
         val state = manager.state
         assertNotNull(state)
         assertFalse(state!!.noFF)
         assertFalse(state.pushAfterMerge)
-        assertTrue(state.pullBeforeMerge)
+        assertFalse(state.pullBeforeMerge)
 
         val newManager = FavoritesManager()
         newManager.loadState(state)
         assertFalse(newManager.isNoFF())
         assertFalse(newManager.isPushAfterMerge())
-        assertTrue(newManager.isPullBeforeMerge())
+        assertFalse(newManager.isPullBeforeMerge())
     }
 }

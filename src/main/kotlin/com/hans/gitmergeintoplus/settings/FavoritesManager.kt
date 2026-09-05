@@ -13,7 +13,7 @@ class FavoritesManager : PersistentStateComponent<FavoritesManager.State> {
         var lastTargets: MutableMap<String, String> = HashMap()
         var noFF: Boolean = true
         var pushAfterMerge: Boolean = true
-        var pullBeforeMerge: Boolean = false
+        var pullBeforeMerge: Boolean = true
     }
 
     private var myState = State()

@@ -19,16 +19,25 @@ import git4idea.commands.Git
 import git4idea.commands.GitCommand
 import git4idea.commands.GitLineHandler
 import git4idea.repo.GitRepository
+import java.awt.BasicStroke
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Component
+import java.awt.Cursor
 import java.awt.Dimension
 import java.awt.Font
+import java.awt.Graphics
+import java.awt.Graphics2D
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
 import java.awt.Rectangle
+import java.awt.RenderingHints
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.MouseMotionAdapter
+import java.awt.geom.Path2D
+import javax.swing.Icon
 import javax.swing.BorderFactory
 import javax.swing.DefaultListCellRenderer
 import javax.swing.DefaultListModel
@@ -81,13 +90,26 @@ class MergeIntoDialog(
         icon = AllIcons.Vcs.CommitNode
         font = font.deriveFont(font.size2D - 1f)
     }
-    private val noFFCheckBox = JCheckBox("Create a merge commit (--no-ff)", favorites.isNoFF())
+    private val noFFCheckBox = JCheckBox("Create a merge commit (--no-ff)", favorites.isNoFF()).apply {
+        addActionListener {
+            commitMessageField.isEnabled = isSelected
+            favorites.setNoFF(isSelected)
+        }
+    }
     private val commitMessageField = JBTextField().apply {
         emptyText.text = "Optional commit message (e.g. Merge feat/login into dev (#1024))"
         isEnabled = favorites.isNoFF()
     }
-    private val pullCheckBox = JCheckBox("Update target branch from remote before merging", favorites.isPullBeforeMerge())
-    private val pushCheckBox = JCheckBox("Push target branch after merging", favorites.isPushAfterMerge())
+    private val pullCheckBox = JCheckBox("Update target branch from remote before merging", favorites.isPullBeforeMerge()).apply {
+        addActionListener {
+            favorites.setPullBeforeMerge(isSelected)
+        }
+    }
+    private val pushCheckBox = JCheckBox("Push target branch after merging", favorites.isPushAfterMerge()).apply {
+        addActionListener {
+            favorites.setPushAfterMerge(isSelected)
+        }
+    }
 
     private var selectedRepository: GitRepository = defaultRepository
     private var currentBranchName: String? = null
@@ -144,6 +166,22 @@ class MergeIntoDialog(
         branchList.setCellRenderer(BranchCellRenderer())
         branchList.addListSelectionListener(this::onSelectionChanged)
         branchList.addMouseListener(BranchMouseListener())
+        branchList.addMouseMotionListener(object : MouseMotionAdapter() {
+            override fun mouseMoved(e: MouseEvent) {
+                val index = branchList.locationToIndex(e.point)
+                if (index >= 0 && index < model.size()) {
+                    val item = model.getElementAt(index)
+                    if (!item.header) {
+                        val cellBounds = branchList.getCellBounds(index, index)
+                        if (cellBounds != null && e.x > cellBounds.x + cellBounds.width - STAR_ZONE_WIDTH) {
+                            branchList.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                            return
+                        }
+                    }
+                }
+                branchList.cursor = Cursor.getDefaultCursor()
+            }
+        })
         val scrollPane = JBScrollPane(branchList)
         scrollPane.preferredSize = Dimension(420, 310)
         panel.add(scrollPane, gbc)
@@ -164,9 +202,6 @@ class MergeIntoDialog(
             weightx = 1.0
             fill = GridBagConstraints.HORIZONTAL
             insets = JBUI.insets(0, 0, 2, 0)
-        }
-        noFFCheckBox.addActionListener {
-            commitMessageField.isEnabled = noFFCheckBox.isSelected
         }
         left.add(noFFCheckBox, oc)
 
@@ -585,12 +620,62 @@ class MergeIntoDialog(
             nameLabel.border = BorderFactory.createEmptyBorder(2, 8, 2, 2)
             panel.add(nameLabel, BorderLayout.CENTER)
 
-            val star = JLabel(if (value.favorite) "\u2605" else "\u2606", SwingConstants.CENTER)
+            val star = JLabel(StarIcon(value.favorite, isSelected), SwingConstants.CENTER)
             star.preferredSize = Dimension(STAR_ZONE_WIDTH, STAR_ZONE_WIDTH)
             star.isOpaque = false
-            star.foreground = if (isSelected) list.selectionForeground else list.foreground
             panel.add(star, BorderLayout.EAST)
             return panel
+        }
+    }
+
+    private class StarIcon(
+        private val favorite: Boolean,
+        private val isSelected: Boolean
+    ) : Icon {
+        private val size = JBUI.scale(13)
+
+        override fun getIconWidth(): Int = size
+        override fun getIconHeight(): Int = size
+
+        override fun paintIcon(c: Component?, g: Graphics, x: Int, y: Int) {
+            val g2 = g.create() as? Graphics2D ?: return
+            try {
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                val cx = x + size / 2.0
+                val cy = y + size / 2.0
+                val outerR = size / 2.0 - 0.5
+                val innerR = outerR * 0.42
+
+                val path = Path2D.Double()
+                val startAngle = -Math.PI / 2.0
+                for (i in 0 until 10) {
+                    val r = if (i % 2 == 0) outerR else innerR
+                    val angle = startAngle + i * Math.PI / 5.0
+                    val px = cx + r * Math.cos(angle)
+                    val py = cy + r * Math.sin(angle)
+                    if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                }
+                path.closePath()
+
+                if (favorite) {
+                    g2.color = JBColor(Color(0xF5A623), Color(0xF5BA2A))
+                    g2.fill(path)
+                    g2.color = JBColor(Color(0xD48806), Color(0xDE9E1B))
+                    g2.stroke = BasicStroke(0.75f)
+                    g2.draw(path)
+                } else {
+                    val strokeColor = if (isSelected) {
+                        JBColor(Color(255, 255, 255, 110), Color(255, 255, 255, 110))
+                    } else {
+                        JBColor(Color(0xD2D2D2), Color(0x525252))
+                    }
+                    g2.color = strokeColor
+                    g2.stroke = BasicStroke(0.85f)
+                    g2.draw(path)
+                }
+            } finally {
+                g2.dispose()
+            }
         }
     }
 

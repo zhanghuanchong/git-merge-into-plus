@@ -2,7 +2,7 @@
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
     <vendor>Hans Zhang</vendor>
-    <version>0.1.6</version>
+    <version>0.1.7</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
@@ -13,9 +13,9 @@
             <li><b>Official Plugin Branding:</b> Modern SVG plugin icons for light and dark IDE themes.</li>
             <li><b>Searchable Branch Picker:</b> Quickly filter and pick target branches, ideal for repositories with many branches.</li>
             <li><b>Real-Time Branch Counter:</b> Live badge displaying branch totals, favorite stars, and dynamic match counts as you filter.</li>
-            <li><b>Favorites Pinned to Top:</b> Star frequently merged branches to keep them pinned at the top of the list.</li>
+            <li><b>Favorites Pinned to Top:</b> Star frequently merged branches with vibrant golden stars; pinned at the top of the list.</li>
             <li><b>Pre-Merge Divergence Intelligence:</b> Real-time status calculating commits to merge (ahead), branch divergence (behind), fast-forward possibility, and an unambiguous <i>Up to date</i> badge.</li>
-            <li><b>Pre-Merge Remote Sync:</b> Optional <code>Update target branch from remote before merging</code> safely fast-forwards the target branch from its remote tracking branch prior to merging.</li>
+            <li><b>Pre-Merge Remote Sync:</b> Optional <code>Update target branch from remote before merging</code> safely fast-forwards the target branch from its remote tracking branch prior to merging (enabled by default with instant memory).</li>
             <li><b>Target Branch Commit Preview:</b> Instant preview of the latest commit (hash, author, date, subject) on any selected target branch.</li>
             <li><b>Custom Merge Commit Message:</b> Specify an optional custom commit message when <code>--no-ff</code> is enabled; falls back to Git standard message if left blank.</li>
             <li><b>Smart Memory:</b> Remembers the last merged target branch for each repository.</li>
@@ -26,6 +26,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.1.7</h4>
+        <ul>
+            <li><b>Enhanced Favorite Star Contrast:</b> Favorited branches are rendered with vibrant golden stars, while unfavorited stars use delicate, subtle outlines and an interactive hand cursor on hover.</li>
+            <li><b>Remote Sync Enabled by Default & Instant Persistence:</b> <code>Update target branch from remote before merging</code> is now enabled by default and immediately remembers your toggled preferences.</li>
+        </ul>
         <h4>0.1.6</h4>
         <ul>
             <li><b>Pre-Merge Divergence Intelligence:</b> Real-time check displaying incoming commits to merge (ahead), divergence metrics (behind), and an unambiguous <i>Up to date</i> status indicator.</li>

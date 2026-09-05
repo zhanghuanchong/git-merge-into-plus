@@ -17,6 +17,11 @@ class MergeIntoActionTest : BasePlatformTestCase() {
         assertInGroup("Git.ContextMenu")
     }
 
+    fun testActionHasIcon() {
+        val action = ActionManager.getInstance().getAction("gitmergeintoplus.MergeInto")
+        assertNotNull("action must have an icon", action.templatePresentation.icon)
+    }
+
     private fun assertInGroup(groupId: String) {
         val group = ActionManager.getInstance().getAction(groupId) as ActionGroup
         val registered = ActionManager.getInstance().getAction("gitmergeintoplus.MergeInto")

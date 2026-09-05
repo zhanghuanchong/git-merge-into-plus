@@ -25,14 +25,16 @@ It combines the best of two existing plugins:
 - **Multi-root projects** — choose which repository to operate on when several are mapped.
 - **Integrated in VCS Operations Popup** (`Alt + \`` / `Ctrl + V`) as well as the **Git menu** with dedicated merge icon and keyboard shortcut.
 
-## Default shortcut
+## Access Points & Shortcuts
 
-| Keymap            | Shortcut           |
-|-------------------|--------------------|
-| Default (Win/Lin) | `Ctrl + Alt + Shift + M` |
-| macOS             | `Cmd + Alt + Shift + M`   |
+You can invoke **Merge Into...** using any of the following convenient methods:
 
-Rebind it anytime in **Settings → Keymap**.
+| Access Method | Shortcut / Path | Note |
+|---|---|---|
+| **VCS Operations Popup** | `Ctrl + V` (macOS) / `Alt + \`` (Win/Linux) | Injected into the IDE's built-in quick list popup |
+| **Dedicated Shortcut** | `Cmd + Alt + Shift + M` (macOS) / `Ctrl + Alt + Shift + M` (Win/Linux) | Rebindable in **Settings → Keymap** |
+| **Git Main Menu** | `Git → Merge Into...` | Displays official Git merge icon |
+| **Context Menu** | Right-click in Editor or Project View → `Git → Merge Into...` | Fast contextual access |
 
 ## Installation
 
@@ -53,12 +55,18 @@ Or run it directly in a test IDE:
 
 ## Usage
 
-1. Be on the branch you want to merge **from** (e.g. a feature branch).
-2. Run **Git → Merge Into...** (or the keyboard shortcut).
-3. Pick the target branch (search or pick from favorites).
-4. Optionally uncheck *Create a merge commit* or check *Push target branch*.
-5. Click **OK**. The plugin checks out the target, merges, pushes if requested, and returns to
-   your original branch.
+1. Be on the branch you want to merge **from** (e.g., your feature branch `feat/login`).
+2. Invoke **Merge Into...** via:
+   - **VCS Operations Popup** (`Ctrl + V` / `Alt + \``)
+   - **Dedicated Shortcut** (`Cmd + Alt + Shift + M` / `Ctrl + Alt + Shift + M`)
+   - **Git Menu** (`Git → Merge Into...`)
+3. Pick the target branch (search or click a starred favorite).
+4. Review the divergence preview (*ahead* / *behind* commits) and recent commit info.
+5. Configure your options (remembered automatically):
+   - **Update target branch from remote before merging**: Fast-forwards the target branch from its remote tracking branch prior to merging.
+   - **Create a merge commit (`--no-ff`)**: Check this to create a merge commit, and optionally enter a custom commit message.
+   - **Push target branch after merge**: Pushes the merged target branch to its remote.
+6. Click **OK**. The plugin switches to the target branch, pulls remote updates (if enabled), merges, pushes (if enabled), and automatically returns you safely to your original branch.
 
 > Tip: the first `gradle` run downloads the IntelliJ SDK (~1.5 GB) — be patient.
 

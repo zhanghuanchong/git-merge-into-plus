@@ -1,9 +1,12 @@
 package com.hans.gitmergeintoplus.dialog
 
 import com.hans.gitmergeintoplus.settings.FavoritesManager
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.DocumentAdapter
+import com.intellij.ui.JBColor
 import com.intellij.ui.SearchTextField
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
@@ -11,6 +14,9 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import git4idea.GitLocalBranch
+import git4idea.commands.Git
+import git4idea.commands.GitCommand
+import git4idea.commands.GitLineHandler
 import git4idea.repo.GitRepository
 import java.awt.BorderLayout
 import java.awt.Component
@@ -37,6 +43,7 @@ import javax.swing.ListSelectionModel
 import javax.swing.SwingConstants
 import javax.swing.SwingUtilities
 import javax.swing.event.ListSelectionEvent
+import java.util.concurrent.ConcurrentHashMap
 
 private const val STAR_ZONE_WIDTH = 24
 
@@ -46,14 +53,26 @@ class MergeIntoDialog(
     private val defaultRepository: GitRepository,
 ) : DialogWrapper(project, true) {
 
+    data class BranchCommitSummary(
+        val hash: String,
+        val author: String,
+        val timeAgo: String,
+        val subject: String,
+    )
+
     private val favorites: FavoritesManager = FavoritesManager.getInstance(project)
 
     private val infoLabel = JBLabel()
     private val searchField = SearchTextField()
     private val model = DefaultListModel<BranchItem>()
     private val branchList = JBList(model)
-    private val noFFCheckBox = JCheckBox("Create a merge commit (--no-ff)")
-    private val pushCheckBox = JCheckBox("Push target branch after merging")
+    private val commitSummaryCache = ConcurrentHashMap<Pair<String, String>, BranchCommitSummary>()
+    private val commitPreviewLabel = JBLabel().apply {
+        icon = AllIcons.Vcs.CommitNode
+        font = font.deriveFont(font.size2D - 1f)
+    }
+    private val noFFCheckBox = JCheckBox("Create a merge commit (--no-ff)", favorites.isNoFF())
+    private val pushCheckBox = JCheckBox("Push target branch after merging", favorites.isPushAfterMerge())
 
     private var selectedRepository: GitRepository = defaultRepository
     private var currentBranchName: String? = null
@@ -63,7 +82,6 @@ class MergeIntoDialog(
         setOKButtonText("Merge")
         init()
         updateForRepository()
-        getOKAction().isEnabled = false
     }
 
     data class BranchItem(val name: String, val header: Boolean, val favorite: Boolean) {
@@ -108,10 +126,15 @@ class MergeIntoDialog(
         branchList.addListSelectionListener(this::onSelectionChanged)
         branchList.addMouseListener(BranchMouseListener())
         val scrollPane = JBScrollPane(branchList)
-        scrollPane.preferredSize = Dimension(420, 360)
+        scrollPane.preferredSize = Dimension(420, 310)
         panel.add(scrollPane, gbc)
 
         gbc.gridy = 4
+        gbc.weighty = 0.0
+        gbc.fill = GridBagConstraints.HORIZONTAL
+        panel.add(createCommitPreviewPanel(), gbc)
+
+        gbc.gridy = 5
         gbc.weighty = 0.0
         gbc.fill = GridBagConstraints.HORIZONTAL
         val options = JPanel(BorderLayout())
@@ -215,6 +238,8 @@ class MergeIntoDialog(
 
         selectBranch(previousSelection)
         branchList.repaint()
+        updateOkButton()
+        updateCommitPreview()
     }
 
     private fun selectBranch(branchName: String?) {
@@ -246,6 +271,103 @@ class MergeIntoDialog(
         if (e.valueIsAdjusting) {
             return
         }
+        updateOkButton()
+        updateCommitPreview()
+    }
+
+    private fun createCommitPreviewPanel(): JComponent {
+        val panel = JPanel(BorderLayout()).apply {
+            border = BorderFactory.createCompoundBorder(
+                JBUI.Borders.customLine(JBColor.border(), 1),
+                JBUI.Borders.empty(6, 8)
+            )
+            background = UIUtil.getPanelBackground()
+        }
+        resetCommitPreview()
+        panel.add(commitPreviewLabel, BorderLayout.CENTER)
+        return panel
+    }
+
+    private fun resetCommitPreview() {
+        commitPreviewLabel.text = "<html><font color='gray'>Select a branch to preview its latest commit</font></html>"
+        commitPreviewLabel.toolTipText = null
+    }
+
+    private fun updateCommitPreview() {
+        val selected = getSelectedBranch()
+        if (selected == null) {
+            resetCommitPreview()
+            return
+        }
+
+        val repo = selectedRepository
+        val key = Pair(repo.root.path, selected)
+        val cached = commitSummaryCache[key]
+        if (cached != null) {
+            showCommitSummary(selected, cached)
+            return
+        }
+
+        commitPreviewLabel.text = "<html><font color='gray'>Loading latest commit for <b>${escape(selected)}</b>...</font></html>"
+        commitPreviewLabel.toolTipText = null
+
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val summary = fetchLatestCommit(repo, selected)
+            if (summary != null) {
+                commitSummaryCache[key] = summary
+            }
+            SwingUtilities.invokeLater {
+                if (getSelectedBranch() == selected && selectedRepository == repo) {
+                    showCommitSummary(selected, summary)
+                }
+            }
+        }
+    }
+
+    private fun showCommitSummary(branch: String, summary: BranchCommitSummary?) {
+        if (summary == null) {
+            commitPreviewLabel.text = "<html><font color='gray'>No commit details available for <b>${escape(branch)}</b></font></html>"
+            commitPreviewLabel.toolTipText = null
+            return
+        }
+        val displaySubject = if (summary.subject.length > 55) {
+            summary.subject.take(52) + "..."
+        } else {
+            summary.subject
+        }
+        val escapedSubject = escape(displaySubject)
+        val escapedAuthor = escape(summary.author)
+        val escapedTime = escape(summary.timeAgo)
+        val escapedHash = escape(summary.hash)
+        commitPreviewLabel.text = "<html><b>Latest commit:</b> <code>$escapedHash</code> $escapedSubject <font color='gray'>&mdash; $escapedAuthor, $escapedTime</font></html>"
+        commitPreviewLabel.toolTipText = "${summary.hash} ${summary.subject} (${summary.author}, ${summary.timeAgo})"
+    }
+
+    private fun fetchLatestCommit(repository: GitRepository, branch: String): BranchCommitSummary? {
+        return try {
+            val handler = GitLineHandler(project, repository.root, GitCommand.LOG)
+            handler.addParameters("-1", "--format=%h\t%an\t%cr\t%s", branch)
+            val result = Git.getInstance().runCommand(handler)
+            if (result.success()) {
+                val line = result.output.firstOrNull()?.trim().orEmpty()
+                if (line.isNotEmpty()) {
+                    val parts = line.split("\t", limit = 4)
+                    if (parts.size >= 4) {
+                        BranchCommitSummary(
+                            hash = parts[0],
+                            author = parts[1],
+                            timeAgo = parts[2],
+                            subject = parts[3]
+                        )
+                    } else null
+                } else null
+            } else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun updateOkButton() {
         val item = branchList.selectedValue
         val valid = item != null && !item.header
         getOKAction().isEnabled = valid && currentBranchName != null
@@ -293,7 +415,7 @@ class MergeIntoDialog(
 
             if (e.clickCount == 2 && !inStarZone && SwingUtilities.isLeftMouseButton(e)) {
                 if (getOKAction().isEnabled) {
-                    close(OK_EXIT_CODE)
+                    doOKAction()
                 }
                 return
             }
@@ -364,6 +486,12 @@ class MergeIntoDialog(
     fun isNoFF(): Boolean = noFFCheckBox.isSelected
 
     fun isPushAfterMerge(): Boolean = pushCheckBox.isSelected
+
+    override fun doOKAction() {
+        favorites.setNoFF(isNoFF())
+        favorites.setPushAfterMerge(isPushAfterMerge())
+        super.doOKAction()
+    }
 
     override fun getPreferredFocusedComponent(): JComponent? = searchField
 }

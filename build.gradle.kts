@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.hans"
-version = "0.1.0"
+version = "0.1.4"
 
 repositories {
     mavenCentral()
@@ -44,7 +44,10 @@ intellijPlatform {
     pluginConfiguration {
         id = "com.hans.git-merge-into-plus"
         name = "Git Merge Into Plus"
-        version = "0.1.0"
+        version = project.version.toString()
+        vendor {
+            name = "Hans Zhang"
+        }
         ideaVersion {
             sinceBuild = "261.0"
             untilBuild = "263.*"

@@ -1,26 +1,50 @@
 <idea-plugin>
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
-    <vendor>hans</vendor>
-    <version>0.1.0</version>
+    <vendor>Hans Zhang</vendor>
+    <version>0.1.4</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
         switches back to the current branch when the operation finishes.
         <br/><br/>
-        Features:
+        <h3>Features:</h3>
         <ul>
-            <li>Searchable target-branch picker (great for repos with many branches)</li>
-            <li>Mark frequently used branches as <b>favorites</b> (star them) — they are pinned to the top</li>
-            <li>Remembers the last target branch per repository</li>
-            <li>Optional <code>--no-ff</code> merge commit and optional push of the target branch</li>
-            <li>Always restores the original (current) branch after the merge, even on failure</li>
+            <li><b>Official Plugin Branding:</b> Modern SVG plugin icons for light and dark IDE themes.</li>
+            <li><b>Searchable Branch Picker:</b> Quickly filter and pick target branches, ideal for repositories with many branches.</li>
+            <li><b>Favorites Pinned to Top:</b> Star frequently merged branches to keep them pinned at the top of the list.</li>
+            <li><b>Target Branch Commit Preview:</b> Instant preview of the latest commit (hash, author, date, subject) on any selected target branch.</li>
+            <li><b>Smart Memory:</b> Remembers the last merged target branch for each repository.</li>
+            <li><b>Persistent Options:</b> Remembers your <code>--no-ff</code> (create merge commit) and <code>push</code> preferences across invocations (both enabled by default).</li>
+            <li><b>Safe Checkout-Back:</b> Automatically switches back to your original branch after merge, even if an error or conflict occurs.</li>
+            <li><b>Quick Shortcuts & Menu Icon:</b> Accessible via <code>Git &rarr; Merge Into...</code> with official Git merge icon or shortcut (<code>Ctrl+Alt+Shift+M</code> / <code>Cmd+Opt+Shift+M</code>).</li>
         </ul>
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.1.4</h4>
         <ul>
-            <li>0.1.0: initial version</li>
+            <li><b>Official Plugin Branding:</b> Added official <code>pluginIcon.svg</code> and <code>pluginIcon_dark.svg</code> for the IDE Plugin Manager and JetBrains Marketplace.</li>
+        </ul>
+        <h4>0.1.3</h4>
+        <ul>
+            <li><b>Dedicated Action Icon:</b> Added official Git merge icon to <code>Git &rarr; Merge Into...</code> in menus for instant visual recognition.</li>
+            <li><b>Target Branch Commit Preview:</b> Displays real-time preview of the latest commit on the selected branch before merging.</li>
+        </ul>
+        <h4>0.1.2</h4>
+        <ul>
+            <li><b>Dynamic Plugin (Hot-Swapping) Support:</b> Fixed extension point registration so the plugin can be installed, updated, and unloaded dynamically without restarting the IDE.</li>
+            <li><b>Internal Cleanup:</b> Migrated notifications to modern <code>NotificationGroupManager</code> and added automated test for dynamic unloadability.</li>
+        </ul>
+        <h4>0.1.1</h4>
+        <ul>
+            <li><b>Remember Merge Options:</b> Automatically saves and restores your <code>--no-ff</code> and <code>push</code> preferences (default: enabled).</li>
+            <li><b>Bug Fix:</b> Fixed an issue where the default-selected branch could not be immediately confirmed without first switching to another branch.</li>
+            <li><b>UI & Metadata:</b> Updated author details and enhanced plugin overview.</li>
+        </ul>
+        <h4>0.1.0</h4>
+        <ul>
+            <li>Initial release.</li>
         </ul>
     ]]></change-notes>
 
@@ -32,15 +56,16 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.hans.gitmergeintoplus.settings.FavoritesManager"/>
-        <notification-group id="gitmergeintoplus.notifications"
-                            displayType="BALLOON"
-                            isLogByDefault="true"/>
+        <notificationGroup id="gitmergeintoplus.notifications"
+                           displayType="BALLOON"
+                           isLogByDefault="true"/>
     </extensions>
 
     <actions>
         <action id="gitmergeintoplus.MergeInto"
                 class="com.hans.gitmergeintoplus.MergeIntoAction"
                 text="Merge Into..."
+                icon="AllIcons.Vcs.Merge"
                 description="Merge current branch into a selected branch and stay on the current branch">
             <add-to-group group-id="Git.MainMenu" anchor="last"/>
             <add-to-group group-id="Git.Menu" anchor="last"/>

@@ -4,6 +4,7 @@ import com.hans.gitmergeintoplus.dialog.MergeIntoDialog
 import com.hans.gitmergeintoplus.git.GitMergeRunner
 import com.hans.gitmergeintoplus.settings.FavoritesManager
 import com.hans.gitmergeintoplus.ui.PluginNotifications
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -14,6 +15,10 @@ import git4idea.repo.GitRepository
 import git4idea.repo.GitRepositoryManager
 
 class MergeIntoAction : AnAction() {
+
+    init {
+        templatePresentation.icon = AllIcons.Vcs.Merge
+    }
 
     override fun update(e: AnActionEvent) {
         val project = e.project
@@ -44,7 +49,10 @@ class MergeIntoAction : AnAction() {
         val currentBranch = dialog.getCurrentBranchName() ?: return
         val targetBranch = dialog.getSelectedBranch() ?: return
 
-        FavoritesManager.getInstance(project).setLastTarget(repository.root.path, targetBranch)
+        val favManager = FavoritesManager.getInstance(project)
+        favManager.setLastTarget(repository.root.path, targetBranch)
+        favManager.setNoFF(dialog.isNoFF())
+        favManager.setPushAfterMerge(dialog.isPushAfterMerge())
 
         GitMergeRunner.run(project, repository, currentBranch, targetBranch,
             dialog.isNoFF(), dialog.isPushAfterMerge())

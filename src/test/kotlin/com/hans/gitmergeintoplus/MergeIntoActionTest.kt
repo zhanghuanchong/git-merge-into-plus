@@ -17,6 +17,10 @@ class MergeIntoActionTest : BasePlatformTestCase() {
         assertInGroup("Git.ContextMenu")
     }
 
+    fun testActionIsInsideVcsOperationsPopup() {
+        assertInGroup("Vcs.Operations.Popup")
+    }
+
     fun testActionHasIcon() {
         val action = ActionManager.getInstance().getAction("gitmergeintoplus.MergeInto")
         assertNotNull("action must have an icon", action.templatePresentation.icon)

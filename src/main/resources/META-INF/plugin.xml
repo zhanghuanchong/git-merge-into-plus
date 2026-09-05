@@ -2,7 +2,7 @@
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
     <vendor>Hans Zhang</vendor>
-    <version>0.1.7</version>
+    <version>0.1.8</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
@@ -21,11 +21,16 @@
             <li><b>Smart Memory:</b> Remembers the last merged target branch for each repository.</li>
             <li><b>Persistent Options:</b> Remembers your <code>--no-ff</code>, <code>push</code>, and <code>pull</code> preferences across invocations.</li>
             <li><b>Safe Checkout-Back:</b> Automatically switches back to your original branch after merge, even if an error or conflict occurs.</li>
+            <li><b>VCS Operations Popup Integration:</b> Directly accessible from the IDE's built-in VCS Operations Popup (<code>Alt+`</code> / <code>Ctrl+V</code>).</li>
             <li><b>Quick Shortcuts & Menu Icon:</b> Accessible via <code>Git &rarr; Merge Into...</code> with official Git merge icon or shortcut (<code>Ctrl+Alt+Shift+M</code> / <code>Cmd+Opt+Shift+M</code>).</li>
         </ul>
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.1.8</h4>
+        <ul>
+            <li><b>VCS Operations Popup Integration:</b> Added <code>Merge Into...</code> directly to the IDE's built-in VCS Operations Popup (<code>Alt+`</code> on Windows/Linux, <code>Ctrl+V</code> on macOS) for faster workflow accessibility.</li>
+        </ul>
         <h4>0.1.7</h4>
         <ul>
             <li><b>Enhanced Favorite Star Contrast:</b> Favorited branches are rendered with vibrant golden stars, while unfavorited stars use delicate, subtle outlines and an interactive hand cursor on hover.</li>
@@ -89,6 +94,7 @@
             <add-to-group group-id="Git.MainMenu" anchor="last"/>
             <add-to-group group-id="Git.Menu" anchor="last"/>
             <add-to-group group-id="Git.ContextMenu" anchor="last"/>
+            <add-to-group group-id="Vcs.Operations.Popup" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift M"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt shift M"/>
         </action>

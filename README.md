@@ -23,7 +23,7 @@ It combines the best of two existing plugins:
   back out, even when something fails (conflicts abort the merge and you're returned safely).
 - **Optional `--no-ff` merge commit** (default on), **remote sync** (default on), and **optional push** of the target branch.
 - **Multi-root projects** — choose which repository to operate on when several are mapped.
-- **Lives under the Git menu** with dedicated merge icon and keyboard shortcut.
+- **Integrated in VCS Operations Popup** (`Alt + \`` / `Ctrl + V`) as well as the **Git menu** with dedicated merge icon and keyboard shortcut.
 
 ## Default shortcut
 

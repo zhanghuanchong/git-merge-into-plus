@@ -162,7 +162,7 @@ class MergeIntoDialog(
         gbc.gridy = 3
         gbc.weighty = 1.0
         gbc.fill = GridBagConstraints.BOTH
-        branchList.selectionMode = ListSelectionModel.SINGLE_SELECTION
+        branchList.selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
         branchList.setCellRenderer(BranchCellRenderer())
         branchList.addListSelectionListener(this::onSelectionChanged)
         branchList.addMouseListener(BranchMouseListener())
@@ -292,7 +292,7 @@ class MergeIntoDialog(
                 if (favorites.isFavorite(repoPath, name)) favoriteNames.add(name) else otherNames.add(name)
             }
 
-        val previousSelection = getSelectedBranch()
+        val previousSelections = getSelectedBranches()
         model.clear()
 
         val totalBranches = selectedRepository.branches.localBranches.count { it.name != currentBranchName }
@@ -327,26 +327,25 @@ class MergeIntoDialog(
             branchList.emptyText.text = "No branches found"
         }
 
-        selectBranch(previousSelection)
+        selectBranches(previousSelections)
         branchList.repaint()
         updateOkButton()
         updateCommitPreview()
     }
 
-    private fun selectBranch(branchName: String?) {
-        var candidate = branchName
-        if (candidate == null) {
-            candidate = favorites.getLastTarget(selectedRepository.root.path)
-        }
-        for (i in 0 until model.size()) {
-            val item = model.getElementAt(i)
-            if (!item.header && (candidate == null || item.name == candidate)) {
-                branchList.selectedIndex = i
-                branchList.ensureIndexIsVisible(i)
-                return
+    private fun selectBranches(branches: List<String>) {
+        if (branches.isEmpty()) {
+            val candidate = favorites.getLastTarget(selectedRepository.root.path)
+            if (candidate != null) {
+                for (i in 0 until model.size()) {
+                    val item = model.getElementAt(i)
+                    if (!item.header && item.name == candidate) {
+                        branchList.selectedIndex = i
+                        branchList.ensureIndexIsVisible(i)
+                        return
+                    }
+                }
             }
-        }
-        if (candidate != null) {
             for (i in 0 until model.size()) {
                 val item = model.getElementAt(i)
                 if (!item.header) {
@@ -355,11 +354,35 @@ class MergeIntoDialog(
                     return
                 }
             }
+            return
+        }
+
+        val indicesToSelect = mutableListOf<Int>()
+        for (i in 0 until model.size()) {
+            val item = model.getElementAt(i)
+            if (!item.header && branches.contains(item.name)) {
+                indicesToSelect.add(i)
+            }
+        }
+
+        if (indicesToSelect.isNotEmpty()) {
+            branchList.selectedIndices = indicesToSelect.toIntArray()
+            branchList.ensureIndexIsVisible(indicesToSelect.first())
         }
     }
 
     private fun onSelectionChanged(e: ListSelectionEvent) {
         if (e.valueIsAdjusting) {
+            return
+        }
+        val selectedIndices = branchList.selectedIndices
+        val headerIndices = selectedIndices.filter { idx ->
+            idx >= 0 && idx < model.size() && model.getElementAt(idx).header
+        }
+        if (headerIndices.isNotEmpty()) {
+            for (idx in headerIndices) {
+                branchList.removeSelectionInterval(idx, idx)
+            }
             return
         }
         updateOkButton()
@@ -399,35 +422,50 @@ class MergeIntoDialog(
     }
 
     private fun updateCommitPreview() {
-        val selected = getSelectedBranch()
-        if (selected == null) {
+        val selected = getSelectedBranches()
+        if (selected.isEmpty()) {
             resetCommitPreview()
             return
         }
 
+        if (selected.size > 1) {
+            val branchListStr = selected.joinToString(", ")
+            divergenceLabel.icon = AllIcons.General.Information
+            divergenceLabel.text = "<html><b>${selected.size} target branches selected:</b> ${escape(branchListStr)}</html>"
+            divergenceLabel.toolTipText = branchListStr
+
+            val current = currentBranchName.orEmpty()
+            commitPreviewLabel.icon = AllIcons.Vcs.Merge
+            commitPreviewLabel.text = "<html>Will merge <b>${escape(current)}</b> into ${selected.size} branches sequentially and return</html>"
+            commitPreviewLabel.toolTipText = "Sequential merge: ${selected.joinToString(" -> ")}"
+            return
+        }
+
+        val target = selected.first()
         val repo = selectedRepository
         val current = currentBranchName ?: ""
-        val key = Triple(repo.root.path, current, selected)
+        val key = Triple(repo.root.path, current, target)
         val cached = commitSummaryCache[key]
         if (cached != null) {
-            showCommitSummary(selected, cached)
+            showCommitSummary(target, cached)
             return
         }
 
         divergenceLabel.icon = AllIcons.Process.Step_1
-        divergenceLabel.text = "<html><font color='gray'>Comparing with <b>${escape(selected)}</b>...</font></html>"
+        divergenceLabel.text = "<html><font color='gray'>Comparing with <b>${escape(target)}</b>...</font></html>"
         divergenceLabel.toolTipText = null
-        commitPreviewLabel.text = "<html><font color='gray'>Loading latest commit for <b>${escape(selected)}</b>...</font></html>"
+        commitPreviewLabel.icon = AllIcons.Vcs.CommitNode
+        commitPreviewLabel.text = "<html><font color='gray'>Loading latest commit for <b>${escape(target)}</b>...</font></html>"
         commitPreviewLabel.toolTipText = null
 
         ApplicationManager.getApplication().executeOnPooledThread {
-            val summary = fetchLatestCommit(repo, selected, currentBranchName)
+            val summary = fetchLatestCommit(repo, target, currentBranchName)
             if (summary != null) {
                 commitSummaryCache[key] = summary
             }
             SwingUtilities.invokeLater {
-                if (getSelectedBranch() == selected && selectedRepository == repo && currentBranchName == current) {
-                    showCommitSummary(selected, summary)
+                if (getSelectedBranches() == listOf(target) && selectedRepository == repo && currentBranchName == current) {
+                    showCommitSummary(target, summary)
                 }
             }
         }
@@ -481,6 +519,7 @@ class MergeIntoDialog(
         val escapedAuthor = escape(summary.author)
         val escapedTime = escape(summary.timeAgo)
         val escapedHash = escape(summary.hash)
+        commitPreviewLabel.icon = AllIcons.Vcs.CommitNode
         commitPreviewLabel.text = "<html><b>Latest on target:</b> <code>$escapedHash</code> $escapedSubject <font color='gray'>&mdash; $escapedAuthor, $escapedTime</font></html>"
         commitPreviewLabel.toolTipText = "${summary.hash} ${summary.subject} (${summary.author}, ${summary.timeAgo})"
     }
@@ -526,9 +565,16 @@ class MergeIntoDialog(
     }
 
     private fun updateOkButton() {
-        val item = branchList.selectedValue
-        val valid = item != null && !item.header
-        getOKAction().isEnabled = valid && currentBranchName != null
+        val selected = getSelectedBranches()
+        val valid = selected.isNotEmpty() && currentBranchName != null
+        getOKAction().isEnabled = valid
+        if (selected.isEmpty()) {
+            setOKButtonText("Merge")
+        } else if (selected.size == 1) {
+            setOKButtonText("Merge into '${selected[0]}'")
+        } else {
+            setOKButtonText("Merge into ${selected.size} branches")
+        }
     }
 
     private fun toggleFavoriteFor(item: BranchItem) {
@@ -541,14 +587,16 @@ class MergeIntoDialog(
 
     private fun showPopupMenu(e: MouseEvent) {
         val index = branchList.locationToIndex(e.point)
-        if (index < 0) {
+        if (index < 0 || index >= model.size()) {
             return
         }
         val item = model.getElementAt(index)
         if (item.header) {
             return
         }
-        branchList.selectedIndex = index
+        if (!branchList.selectedIndices.contains(index)) {
+            branchList.selectedIndex = index
+        }
         val menu = JPopupMenu()
         if (item.favorite) {
             menu.add("Remove from favorites").addActionListener { toggleFavoriteFor(item) }
@@ -561,11 +609,12 @@ class MergeIntoDialog(
     private inner class BranchMouseListener : MouseAdapter() {
         override fun mouseClicked(e: MouseEvent) {
             val index = branchList.locationToIndex(e.point)
-            if (index < 0) {
+            if (index < 0 || index >= model.size()) {
                 return
             }
             val item = model.getElementAt(index)
             if (item.header) {
+                branchList.removeSelectionInterval(index, index)
                 return
             }
             val cellBounds = branchList.getCellBounds(index, index)
@@ -686,10 +735,14 @@ class MergeIntoDialog(
 
     fun getCurrentBranchName(): String? = currentBranchName
 
-    fun getSelectedBranch(): String? {
-        val item = branchList.selectedValue
-        return if (item == null || item.header) null else item.name
+    fun getSelectedBranches(): List<String> {
+        return branchList.selectedValuesList
+            .filter { !it.header }
+            .map { it.name }
+            .distinct()
     }
+
+    fun getSelectedBranch(): String? = getSelectedBranches().firstOrNull()
 
     fun isNoFF(): Boolean = noFFCheckBox.isSelected
 
@@ -714,6 +767,10 @@ class MergeIntoDialog(
         favorites.setNoFF(isNoFF())
         favorites.setPushAfterMerge(isPushAfterMerge())
         favorites.setPullBeforeMerge(isPullBeforeMerge())
+        val selected = getSelectedBranches()
+        if (selected.isNotEmpty()) {
+            favorites.setLastTarget(selectedRepository.root.path, selected.first())
+        }
         super.doOKAction()
     }
 

@@ -68,21 +68,24 @@ class MergeIntoActionTest : BasePlatformTestCase() {
         assertEquals("Merge feat/login into dev (#1024)", trimmed)
     }
 
-    fun testBranchCommitSummaryStructure() {
-        val summary = com.hans.gitmergeintoplus.dialog.MergeIntoDialog.BranchCommitSummary(
-            hash = "a1b2c3d",
-            author = "Hans Zhang",
-            timeAgo = "2 hours ago",
-            subject = "feat: pre-merge inspection",
-            ahead = 3,
-            behind = 1
+    fun testResolveCommitMessageForMultipleBranches() {
+        val targets = listOf("dev", "test", "staging")
+        val messages = targets.map { com.hans.gitmergeintoplus.git.GitMergeRunner.resolveCommitMessage("feat/login", it, null) }
+        assertEquals("Merge branch 'feat/login' into dev", messages[0])
+        assertEquals("Merge branch 'feat/login' into test", messages[1])
+        assertEquals("Merge branch 'feat/login' into staging", messages[2])
+    }
+
+    fun testBranchItemHeadersAndFiltering() {
+        val items = listOf(
+            com.hans.gitmergeintoplus.dialog.MergeIntoDialog.BranchItem.header("Favorites"),
+            com.hans.gitmergeintoplus.dialog.MergeIntoDialog.BranchItem.branch("dev", true),
+            com.hans.gitmergeintoplus.dialog.MergeIntoDialog.BranchItem.header("All branches"),
+            com.hans.gitmergeintoplus.dialog.MergeIntoDialog.BranchItem.branch("main", false),
+            com.hans.gitmergeintoplus.dialog.MergeIntoDialog.BranchItem.branch("test", false)
         )
-        assertEquals("a1b2c3d", summary.hash)
-        assertEquals("Hans Zhang", summary.author)
-        assertEquals("2 hours ago", summary.timeAgo)
-        assertEquals("feat: pre-merge inspection", summary.subject)
-        assertEquals(3, summary.ahead)
-        assertEquals(1, summary.behind)
+        val branchesOnly = items.filter { !it.header }.map { it.name }
+        assertEquals(listOf("dev", "main", "test"), branchesOnly)
     }
 }
 

@@ -34,12 +34,33 @@ object GitMergeRunner {
         pullBeforeMerge: Boolean = false,
         customCommitMessage: String? = null,
     ) {
+        run(project, repository, currentBranch, listOf(targetBranch), noFF, push, pullBeforeMerge, customCommitMessage)
+    }
+
+    fun run(
+        project: Project,
+        repository: GitRepository,
+        currentBranch: String,
+        targetBranches: List<String>,
+        noFF: Boolean,
+        push: Boolean,
+        pullBeforeMerge: Boolean = false,
+        customCommitMessage: String? = null,
+    ) {
+        if (targetBranches.isEmpty()) return
+
+        val title = if (targetBranches.size == 1) {
+            "Merge '$currentBranch' into '${targetBranches.first()}'"
+        } else {
+            "Merge '$currentBranch' into ${targetBranches.size} branches"
+        }
+
         ProgressManager.getInstance().run(object :
-            Task.Backgroundable(project, "Merge '$currentBranch' into '$targetBranch'", false) {
+            Task.Backgroundable(project, title, false) {
             override fun run(indicator: ProgressIndicator) {
                 indicator.isIndeterminate = true
                 indicator.text = "Preparing merge..."
-                perform(project, repository, currentBranch, targetBranch, noFF, push, pullBeforeMerge, customCommitMessage, indicator)
+                perform(project, repository, currentBranch, targetBranches, noFF, push, pullBeforeMerge, customCommitMessage, indicator)
             }
         })
     }
@@ -48,7 +69,7 @@ object GitMergeRunner {
         project: Project,
         repository: GitRepository,
         currentBranch: String,
-        targetBranch: String,
+        targetBranches: List<String>,
         noFF: Boolean,
         push: Boolean,
         pullBeforeMerge: Boolean,
@@ -61,87 +82,91 @@ object GitMergeRunner {
         if (dirty && !confirmProceedWithUncommittedChanges(project)) {
             PluginNotifications.info(
                 project, "Merge cancelled",
-                "Merge into '$targetBranch' was cancelled due to uncommitted changes."
+                "Merge was cancelled due to uncommitted changes."
             )
             return
         }
 
-        val checkout = runCommand(project, root, GitCommand.CHECKOUT, targetBranch)
-        if (!checkout.success()) {
-            PluginNotifications.error(
-                project, "Checkout failed",
-                "Could not switch to branch '$targetBranch'.\n\n" + errorText(checkout)
-            )
-            return
-        }
+        val successfulBranches = mutableListOf<String>()
+        val pushedBranches = mutableListOf<String>()
+        val pushFailedBranches = mutableListOf<String>()
+        var failedBranch: String? = null
+        var failureMessage: String? = null
+        var isConflict = false
+        var conflictDetails = ""
 
-        if (pullBeforeMerge) {
-            val remote = resolveRemote(repository, targetBranch)
-            if (remote != null) {
-                indicator.text = "Updating '$targetBranch' from '$remote'..."
-                val trackInfo = repository.getBranchTrackInfo(targetBranch)
-                val remoteBranch = trackInfo?.remoteBranch?.nameForRemoteOperations ?: targetBranch
-                val pullResult = runCommand(project, root, GitCommand.PULL, "--ff-only", remote, remoteBranch)
-                if (!pullResult.success()) {
-                    PluginNotifications.error(
-                        project, "Update failed",
-                        "Could not fast-forward '$targetBranch' from '$remote/$remoteBranch'.\n\n" +
-                            errorText(pullResult)
-                    )
-                    return
-                }
-            } else {
-                PluginNotifications.warning(
-                    project, "Update skipped",
-                    "No remote found for branch '$targetBranch' — update was skipped."
-                )
-            }
-        }
-
-        var merged = false
         try {
-            indicator.text = "Merging '$currentBranch' into '$targetBranch'..."
-            val mergeArgs = buildList {
-                if (noFF) add("--no-ff")
-                add("-m")
-                add(resolveCommitMessage(currentBranch, targetBranch, customCommitMessage))
-                add(currentBranch)
-            }
-            val merge = runCommand(project, root, GitCommand.MERGE, mergeArgs)
+            for ((index, targetBranch) in targetBranches.withIndex()) {
+                val stepPrefix = if (targetBranches.size > 1) "(${index + 1}/${targetBranches.size}) " else ""
 
-            if (!merge.success()) {
-                if (isMergeConflict(merge)) {
-                    val abort = runCommand(project, root, GitCommand.MERGE, "--abort")
-                    PluginNotifications.error(
-                        project, "Merge conflicts",
-                        "Merging '$currentBranch' into '$targetBranch' caused conflicts and was aborted.\n\n" +
-                            "Conflicts detected:\n" + conflictText(merge) +
-                            if (abort.success()) "" else "\n\n(merge --abort also failed: " + errorText(abort) + ")"
-                    )
-                } else {
-                    PluginNotifications.error(
-                        project, "Merge failed",
-                        "Merging '$currentBranch' into '$targetBranch' failed.\n\n" + errorText(merge)
-                    )
+                indicator.text = "${stepPrefix}Checking out '$targetBranch'..."
+                val checkout = runCommand(project, root, GitCommand.CHECKOUT, targetBranch)
+                if (!checkout.success()) {
+                    failedBranch = targetBranch
+                    failureMessage = "Could not switch to branch '$targetBranch'.\n\n" + errorText(checkout)
+                    break
                 }
-                return
-            }
-            merged = true
 
-            if (push) {
-                val remote = resolveRemote(repository, targetBranch)
-                if (remote == null) {
-                    PluginNotifications.warning(
-                        project, "Push skipped",
-                        "No remote found for branch '$targetBranch' — push was skipped."
-                    )
-                } else {
-                    indicator.text = "Pushing '$targetBranch' to '$remote'..."
-                    val pushResult = runCommand(project, root, GitCommand.PUSH, remote, targetBranch)
-                    if (!pushResult.success()) {
+                if (pullBeforeMerge) {
+                    val remote = resolveRemote(repository, targetBranch)
+                    if (remote != null) {
+                        indicator.text = "${stepPrefix}Updating '$targetBranch' from '$remote'..."
+                        val trackInfo = repository.getBranchTrackInfo(targetBranch)
+                        val remoteBranch = trackInfo?.remoteBranch?.nameForRemoteOperations ?: targetBranch
+                        val pullResult = runCommand(project, root, GitCommand.PULL, "--ff-only", remote, remoteBranch)
+                        if (!pullResult.success()) {
+                            failedBranch = targetBranch
+                            failureMessage = "Could not fast-forward '$targetBranch' from '$remote/$remoteBranch'.\n\n" +
+                                errorText(pullResult)
+                            break
+                        }
+                    } else {
                         PluginNotifications.warning(
-                            project, "Push failed",
-                            "Push of '$targetBranch' to '$remote' failed.\n\n" + errorText(pushResult)
+                            project, "Update skipped",
+                            "No remote found for branch '$targetBranch' — update was skipped."
+                        )
+                    }
+                }
+
+                indicator.text = "${stepPrefix}Merging '$currentBranch' into '$targetBranch'..."
+                val mergeArgs = buildList {
+                    if (noFF) add("--no-ff")
+                    add("-m")
+                    add(resolveCommitMessage(currentBranch, targetBranch, customCommitMessage))
+                    add(currentBranch)
+                }
+                val merge = runCommand(project, root, GitCommand.MERGE, mergeArgs)
+
+                if (!merge.success()) {
+                    failedBranch = targetBranch
+                    if (isMergeConflict(merge)) {
+                        isConflict = true
+                        val abort = runCommand(project, root, GitCommand.MERGE, "--abort")
+                        conflictDetails = "Conflicts detected:\n" + conflictText(merge) +
+                            if (abort.success()) "" else "\n\n(merge --abort also failed: " + errorText(abort) + ")"
+                        failureMessage = "Merging '$currentBranch' into '$targetBranch' caused conflicts and was aborted."
+                    } else {
+                        failureMessage = "Merging '$currentBranch' into '$targetBranch' failed.\n\n" + errorText(merge)
+                    }
+                    break
+                }
+
+                successfulBranches.add(targetBranch)
+
+                if (push) {
+                    val remote = resolveRemote(repository, targetBranch)
+                    if (remote != null) {
+                        indicator.text = "${stepPrefix}Pushing '$targetBranch' to '$remote'..."
+                        val pushResult = runCommand(project, root, GitCommand.PUSH, remote, targetBranch)
+                        if (pushResult.success()) {
+                            pushedBranches.add(targetBranch)
+                        } else {
+                            pushFailedBranches.add(targetBranch)
+                        }
+                    } else {
+                        PluginNotifications.warning(
+                            project, "Push skipped",
+                            "No remote found for branch '$targetBranch' — push was skipped."
                         )
                     }
                 }
@@ -149,20 +174,80 @@ object GitMergeRunner {
         } finally {
             indicator.text = "Returning to '$currentBranch'..."
             val back = runCommand(project, root, GitCommand.CHECKOUT, currentBranch)
-            if (merged && back.success()) {
-                PluginNotifications.info(
-                    project, "Merge complete",
-                    "Merged '$currentBranch' into '$targetBranch'.\n" +
-                        "You are back on '$currentBranch'."
-                )
-            } else if (merged) {
-                PluginNotifications.warning(
-                    project, "Merge complete, checkout back failed",
-                    "Merged '$currentBranch' into '$targetBranch', but could not return to " +
-                        "'$currentBranch'. You are now on '$targetBranch'.\n\n" + errorText(back)
-                )
-            }
+            val backSuccess = back.success()
+
+            notifyMergeResults(
+                project, currentBranch, targetBranches, successfulBranches,
+                pushedBranches, pushFailedBranches, failedBranch, failureMessage,
+                isConflict, conflictDetails, backSuccess, back
+            )
+
             GitBranchUtil.updateBranches(project, listOf(repository), emptyList())
+        }
+    }
+
+    private fun notifyMergeResults(
+        project: Project,
+        currentBranch: String,
+        allTargets: List<String>,
+        successfulBranches: List<String>,
+        pushedBranches: List<String>,
+        pushFailedBranches: List<String>,
+        failedBranch: String?,
+        failureMessage: String?,
+        isConflict: Boolean,
+        conflictDetails: String,
+        backSuccess: Boolean,
+        backResult: GitCommandResult,
+    ) {
+        if (failedBranch == null) {
+            val title = if (allTargets.size == 1) "Merge complete" else "All ${allTargets.size} merges complete"
+            val sb = StringBuilder()
+            if (allTargets.size == 1) {
+                sb.append("Merged '$currentBranch' into '${allTargets.first()}'.\n")
+            } else {
+                sb.append("Successfully merged '$currentBranch' into ${allTargets.size} branches:\n")
+                sb.append(allTargets.joinToString(", "))
+                sb.append("\n")
+            }
+            if (pushedBranches.isNotEmpty()) {
+                sb.append("Pushed: ").append(pushedBranches.joinToString(", ")).append("\n")
+            }
+            if (pushFailedBranches.isNotEmpty()) {
+                sb.append("Push failed: ").append(pushFailedBranches.joinToString(", ")).append("\n")
+            }
+            if (backSuccess) {
+                sb.append("You are back on '$currentBranch'.")
+                PluginNotifications.info(project, title, sb.toString().trim())
+            } else {
+                sb.append("\nCould not return to '$currentBranch'.\n\n").append(errorText(backResult))
+                PluginNotifications.warning(project, "$title, checkout back failed", sb.toString().trim())
+            }
+            return
+        }
+
+        val title = if (isConflict) "Merge conflicts" else "Merge failed"
+        val sb = StringBuilder()
+        if (successfulBranches.isNotEmpty()) {
+            sb.append("Partially completed.\n")
+            sb.append("Merged successfully: ").append(successfulBranches.joinToString(", ")).append("\n\n")
+        }
+        sb.append(failureMessage.orEmpty()).append("\n")
+        if (isConflict && conflictDetails.isNotEmpty()) {
+            sb.append("\n").append(conflictDetails).append("\n")
+        }
+
+        val remainingBranches = allTargets.dropWhile { it != failedBranch }.drop(1)
+        if (remainingBranches.isNotEmpty()) {
+            sb.append("\nRemaining branches skipped: ").append(remainingBranches.joinToString(", ")).append("\n")
+        }
+
+        if (backSuccess) {
+            sb.append("\nYou are back on '$currentBranch'.")
+            PluginNotifications.error(project, title, sb.toString().trim())
+        } else {
+            sb.append("\nCould not return to '$currentBranch'.\n\n").append(errorText(backResult))
+            PluginNotifications.warning(project, "$title, checkout back failed", sb.toString().trim())
         }
     }
 

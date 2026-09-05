@@ -12,6 +12,7 @@ It combines the best of two existing plugins:
 
 ## Features
 
+- **Multi-target branch merge** — select multiple target branches simultaneously (`Cmd/Ctrl`+Click or `Shift`+Click) to merge into multiple target branches sequentially in one operation with automatic rollback if any branch encounters conflicts.
 - **Searchable branch picker & real-time counter** — live badge displaying total, favorite, and filtered branch counts.
 - **Favorites** — star frequently used branches with radiant golden stars (right-click or click star); favorites are pinned to the top of the list, and unstarred branches feature subtle faint outlines.
 - **Pre-merge divergence intelligence** — real-time calculation of incoming commits to merge (ahead), divergence metrics (behind), fast-forward checks, and an unambiguous *Up to date* badge.
@@ -60,13 +61,13 @@ Or run it directly in a test IDE:
    - **VCS Operations Popup** (`Ctrl + V` / `Alt + \``)
    - **Dedicated Shortcut** (`Cmd + Alt + Shift + M` / `Ctrl + Alt + Shift + M`)
    - **Git Menu** (`Git → Merge Into...`)
-3. Pick the target branch (search or click a starred favorite).
-4. Review the divergence preview (*ahead* / *behind* commits) and recent commit info.
+3. Pick one or more target branches (search, click a starred favorite, or `Cmd`/`Ctrl`+click / `Shift`+click to select multiple).
+4. Review the divergence preview (*ahead* / *behind* commits) and recent commit info (or multi-target summary when multiple branches are selected).
 5. Configure your options (remembered automatically):
    - **Update target branch from remote before merging**: Fast-forwards the target branch from its remote tracking branch prior to merging.
    - **Create a merge commit (`--no-ff`)**: Check this to create a merge commit, and optionally enter a custom commit message.
    - **Push target branch after merge**: Pushes the merged target branch to its remote.
-6. Click **OK**. The plugin switches to the target branch, pulls remote updates (if enabled), merges, pushes (if enabled), and automatically returns you safely to your original branch.
+6. Click **Merge into ...**. The plugin switches to each target branch in sequence, pulls remote updates (if enabled), merges, pushes (if enabled), and automatically returns you safely to your original branch.
 
 > Tip: the first `gradle` run downloads the IntelliJ SDK (~1.5 GB) — be patient.
 

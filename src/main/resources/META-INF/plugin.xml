@@ -2,7 +2,7 @@
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
     <vendor>Hans Zhang</vendor>
-    <version>0.1.8</version>
+    <version>0.1.9</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
@@ -11,6 +11,7 @@
         <h3>Features:</h3>
         <ul>
             <li><b>Official Plugin Branding:</b> Modern SVG plugin icons for light and dark IDE themes.</li>
+            <li><b>Multi-Target Branch Merge:</b> Select multiple target branches simultaneously using <code>Cmd/Ctrl</code>+Click or <code>Shift</code>+Click to merge into multiple targets in one go with safe rollback.</li>
             <li><b>Searchable Branch Picker:</b> Quickly filter and pick target branches, ideal for repositories with many branches.</li>
             <li><b>Real-Time Branch Counter:</b> Live badge displaying branch totals, favorite stars, and dynamic match counts as you filter.</li>
             <li><b>Favorites Pinned to Top:</b> Star frequently merged branches with vibrant golden stars; pinned at the top of the list.</li>
@@ -27,6 +28,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.1.9</h4>
+        <ul>
+            <li><b>Simultaneous Multi-Target Branch Merging:</b> Select multiple target branches simultaneously (using <code>Cmd/Ctrl</code>+click or <code>Shift</code>+click) to sequentially merge the current branch into all selected targets with automatic remote sync, push, and safe return to the starting branch.</li>
+            <li><b>Adaptive Dialog Feedback:</b> Dynamic action button text reflecting selected branch counts (e.g. <code>Merge into 3 branches</code>) and informative multi-target sequential merge preview.</li>
+        </ul>
         <h4>0.1.8</h4>
         <ul>
             <li><b>VCS Operations Popup Integration:</b> Added <code>Merge Into...</code> directly to the IDE's built-in VCS Operations Popup (<code>Alt+`</code> on Windows/Linux, <code>Ctrl+V</code> on macOS) for faster workflow accessibility.</li>

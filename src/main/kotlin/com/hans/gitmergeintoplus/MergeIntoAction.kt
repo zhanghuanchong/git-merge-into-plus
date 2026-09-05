@@ -47,16 +47,19 @@ class MergeIntoAction : AnAction() {
 
         val repository = dialog.getRepository() ?: return
         val currentBranch = dialog.getCurrentBranchName() ?: return
-        val targetBranch = dialog.getSelectedBranch() ?: return
+        val targetBranches = dialog.getSelectedBranches()
+        if (targetBranches.isEmpty()) {
+            return
+        }
 
         val favManager = FavoritesManager.getInstance(project)
-        favManager.setLastTarget(repository.root.path, targetBranch)
+        favManager.setLastTarget(repository.root.path, targetBranches.first())
         favManager.setNoFF(dialog.isNoFF())
         favManager.setPushAfterMerge(dialog.isPushAfterMerge())
         favManager.setPullBeforeMerge(dialog.isPullBeforeMerge())
 
         GitMergeRunner.run(
-            project, repository, currentBranch, targetBranch,
+            project, repository, currentBranch, targetBranches,
             dialog.isNoFF(), dialog.isPushAfterMerge(), dialog.isPullBeforeMerge(), dialog.getCustomCommitMessage()
         )
     }

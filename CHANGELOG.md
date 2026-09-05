@@ -4,6 +4,12 @@ All notable changes to **Git Merge Into Plus** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2026-09-05
+### Added
+- **Multi-Target Branch Merging**: Support selecting multiple target branches simultaneously (`Cmd/Ctrl`+click or `Shift`+click) to merge the current branch into all chosen branches sequentially in one run.
+- **Fail-Safe Sequential Execution**: If any target branch fails or encounters conflicts during multi-merge, the operation safely aborts the conflict, reports partial completion, skips remaining branches, and always switches back to the original starting branch.
+- **Adaptive Action Button & Preview**: Dialog OK button dynamically adapts to the selection (e.g. `Merge into 'dev'`, `Merge into 3 branches`), with multi-branch preview summary.
+
 ## [0.1.8] - 2026-09-05
 ### Added
 - **VCS Operations Popup Integration**: Added `Merge Into...` directly to the IDE's built-in VCS Operations Popup (`Alt + \`` on Windows/Linux, `Ctrl + V` on macOS) for quick keyboard-driven access.

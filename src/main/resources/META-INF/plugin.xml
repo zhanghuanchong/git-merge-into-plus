@@ -2,7 +2,7 @@
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
     <vendor>Hans Zhang</vendor>
-    <version>0.1.9</version>
+    <version>0.2.0</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
@@ -11,6 +11,7 @@
         <h3>Features:</h3>
         <ul>
             <li><b>Official Plugin Branding:</b> Modern SVG plugin icons for light and dark IDE themes.</li>
+            <li><b>Git Branches Popup &amp; Context Menu Integration:</b> Seamlessly accessible directly from the IDE status bar branch widget, New UI main toolbar Git widget, and branch context menus with intelligent pre-selection.</li>
             <li><b>Multi-Target Branch Merge:</b> Select multiple target branches simultaneously using <code>Cmd/Ctrl</code>+Click or <code>Shift</code>+Click to merge into multiple targets in one go with safe rollback.</li>
             <li><b>Searchable Branch Picker:</b> Quickly filter and pick target branches, ideal for repositories with many branches.</li>
             <li><b>Real-Time Branch Counter:</b> Live badge displaying branch totals, favorite stars, and dynamic match counts as you filter.</li>
@@ -28,6 +29,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.2.0</h4>
+        <ul>
+            <li><b>Git Branches Popup Integration:</b> Integrated <code>Merge Into...</code> directly into the Git Branches popup (<code>Git.Branches.List</code>) accessed from the status bar or main navigation toolbar widget.</li>
+            <li><b>Branch Context Action &amp; Smart Pre-Selection:</b> Integrated into branch action menus (<code>Git.Branch.Backend</code>); dynamically presents <code>Merge '&lt;current&gt;' into '&lt;target&gt;' (Plus)...</code> and automatically pre-selects the chosen target branch in the dialog.</li>
+        </ul>
         <h4>0.1.9</h4>
         <ul>
             <li><b>Simultaneous Multi-Target Branch Merging:</b> Select multiple target branches simultaneously (using <code>Cmd/Ctrl</code>+click or <code>Shift</code>+click) to sequentially merge the current branch into all selected targets with automatic remote sync, push, and safe return to the starting branch.</li>
@@ -101,6 +107,8 @@
             <add-to-group group-id="Git.Menu" anchor="last"/>
             <add-to-group group-id="Git.ContextMenu" anchor="last"/>
             <add-to-group group-id="Vcs.Operations.Popup" anchor="last"/>
+            <add-to-group group-id="Git.Branches.List" anchor="after" relative-to-action="Git.CreateNewBranch"/>
+            <add-to-group group-id="Git.Branch.Backend" anchor="after" relative-to-action="git4idea.actions.ref.GitMergeRefAction"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift M"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="meta alt shift M"/>
         </action>

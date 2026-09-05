@@ -4,6 +4,12 @@ All notable changes to **Git Merge Into Plus** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-09-05
+### Added
+- **Git Branches Popup Integration**: Added `Merge Into...` directly into the top-level actions list (`Git.Branches.List`) of the Git Branches popup opened from the IDE status bar branch widget or main navigation toolbar widget.
+- **Branch Context Actions & Smart Pre-Selection**: Integrated into branch action menus (`Git.Branch.Backend`); dynamically presents `Merge '<current>' into '<target>' (Plus)...` when right-clicking/clicking any branch, automatically pre-selecting that branch in the dialog with instant divergence stats and commit preview.
+- **Self-Merge Guard**: Gracefully disables the action when the clicked branch is the current branch.
+
 ## [0.1.9] - 2026-09-05
 ### Added
 - **Multi-Target Branch Merging**: Support selecting multiple target branches simultaneously (`Cmd/Ctrl`+click or `Shift`+click) to merge the current branch into all chosen branches sequentially in one run.

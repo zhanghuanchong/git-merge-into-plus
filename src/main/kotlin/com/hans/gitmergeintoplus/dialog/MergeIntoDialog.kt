@@ -61,6 +61,7 @@ class MergeIntoDialog(
     private val project: Project,
     private val repositories: List<GitRepository>,
     private val defaultRepository: GitRepository,
+    private val preselectedTarget: String? = null,
 ) : DialogWrapper(project, true) {
 
     data class BranchCommitSummary(
@@ -335,7 +336,7 @@ class MergeIntoDialog(
 
     private fun selectBranches(branches: List<String>) {
         if (branches.isEmpty()) {
-            val candidate = favorites.getLastTarget(selectedRepository.root.path)
+            val candidate = preselectedTarget ?: favorites.getLastTarget(selectedRepository.root.path)
             if (candidate != null) {
                 for (i in 0 until model.size()) {
                     val item = model.getElementAt(i)

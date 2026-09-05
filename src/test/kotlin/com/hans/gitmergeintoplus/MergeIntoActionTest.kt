@@ -21,6 +21,11 @@ class MergeIntoActionTest : BasePlatformTestCase() {
         assertInGroup("Vcs.Operations.Popup")
     }
 
+    fun testActionIsInsideGitBranchesPopupAndBranchMenu() {
+        assertInGroup("Git.Branches.List")
+        assertInGroup("Git.Branch.Backend")
+    }
+
     fun testActionHasIcon() {
         val action = ActionManager.getInstance().getAction("gitmergeintoplus.MergeInto")
         assertNotNull("action must have an icon", action.templatePresentation.icon)
@@ -86,6 +91,11 @@ class MergeIntoActionTest : BasePlatformTestCase() {
         )
         val branchesOnly = items.filter { !it.header }.map { it.name }
         assertEquals(listOf("dev", "main", "test"), branchesOnly)
+    }
+
+    fun testActionUpdateThreadIsBGT() {
+        val action = ActionManager.getInstance().getAction("gitmergeintoplus.MergeInto") as MergeIntoAction
+        assertEquals(com.intellij.openapi.actionSystem.ActionUpdateThread.BGT, action.actionUpdateThread)
     }
 }
 

@@ -59,6 +59,8 @@ class MergeIntoDialog(
         val author: String,
         val timeAgo: String,
         val subject: String,
+        val ahead: Int = 0,
+        val behind: Int = 0,
     )
 
     private val favorites: FavoritesManager = FavoritesManager.getInstance(project)
@@ -71,7 +73,10 @@ class MergeIntoDialog(
     }
     private val model = DefaultListModel<BranchItem>()
     private val branchList = JBList(model)
-    private val commitSummaryCache = ConcurrentHashMap<Pair<String, String>, BranchCommitSummary>()
+    private val commitSummaryCache = ConcurrentHashMap<Triple<String, String, String>, BranchCommitSummary>()
+    private val divergenceLabel = JBLabel().apply {
+        font = font.deriveFont(font.size2D - 1f)
+    }
     private val commitPreviewLabel = JBLabel().apply {
         icon = AllIcons.Vcs.CommitNode
         font = font.deriveFont(font.size2D - 1f)
@@ -81,6 +86,7 @@ class MergeIntoDialog(
         emptyText.text = "Optional commit message (e.g. Merge feat/login into dev (#1024))"
         isEnabled = favorites.isNoFF()
     }
+    private val pullCheckBox = JCheckBox("Update target branch from remote before merging", favorites.isPullBeforeMerge())
     private val pushCheckBox = JCheckBox("Push target branch after merging", favorites.isPushAfterMerge())
 
     private var selectedRepository: GitRepository = defaultRepository
@@ -176,6 +182,10 @@ class MergeIntoDialog(
         left.add(commitMsgPanel, oc)
 
         oc.gridy = 2
+        oc.insets = JBUI.insets(2, 0, 2, 0)
+        left.add(pullCheckBox, oc)
+
+        oc.gridy = 3
         oc.insets = JBUI.insets(2, 0, 2, 0)
         left.add(pushCheckBox, oc)
         options.add(left, BorderLayout.CENTER)
@@ -322,20 +332,34 @@ class MergeIntoDialog(
     }
 
     private fun createCommitPreviewPanel(): JComponent {
-        val panel = JPanel(BorderLayout()).apply {
+        val panel = JPanel(GridBagLayout()).apply {
             border = BorderFactory.createCompoundBorder(
                 JBUI.Borders.customLine(JBColor.border(), 1),
                 JBUI.Borders.empty(6, 8)
             )
             background = UIUtil.getPanelBackground()
         }
+        val c = GridBagConstraints().apply {
+            gridx = 0
+            weightx = 1.0
+            fill = GridBagConstraints.HORIZONTAL
+            anchor = GridBagConstraints.WEST
+        }
+        c.gridy = 0
+        c.insets = JBUI.insetsBottom(4)
+        panel.add(divergenceLabel, c)
+        c.gridy = 1
+        c.insets = JBUI.emptyInsets()
+        panel.add(commitPreviewLabel, c)
         resetCommitPreview()
-        panel.add(commitPreviewLabel, BorderLayout.CENTER)
         return panel
     }
 
     private fun resetCommitPreview() {
-        commitPreviewLabel.text = "<html><font color='gray'>Select a branch to preview its latest commit</font></html>"
+        divergenceLabel.icon = AllIcons.General.Information
+        divergenceLabel.text = "<html><font color='gray'>Select a target branch to preview status and commits</font></html>"
+        divergenceLabel.toolTipText = null
+        commitPreviewLabel.text = "<html><font color='gray'>Latest commit details will appear here</font></html>"
         commitPreviewLabel.toolTipText = null
     }
 
@@ -347,23 +371,27 @@ class MergeIntoDialog(
         }
 
         val repo = selectedRepository
-        val key = Pair(repo.root.path, selected)
+        val current = currentBranchName ?: ""
+        val key = Triple(repo.root.path, current, selected)
         val cached = commitSummaryCache[key]
         if (cached != null) {
             showCommitSummary(selected, cached)
             return
         }
 
+        divergenceLabel.icon = AllIcons.Process.Step_1
+        divergenceLabel.text = "<html><font color='gray'>Comparing with <b>${escape(selected)}</b>...</font></html>"
+        divergenceLabel.toolTipText = null
         commitPreviewLabel.text = "<html><font color='gray'>Loading latest commit for <b>${escape(selected)}</b>...</font></html>"
         commitPreviewLabel.toolTipText = null
 
         ApplicationManager.getApplication().executeOnPooledThread {
-            val summary = fetchLatestCommit(repo, selected)
+            val summary = fetchLatestCommit(repo, selected, currentBranchName)
             if (summary != null) {
                 commitSummaryCache[key] = summary
             }
             SwingUtilities.invokeLater {
-                if (getSelectedBranch() == selected && selectedRepository == repo) {
+                if (getSelectedBranch() == selected && selectedRepository == repo && currentBranchName == current) {
                     showCommitSummary(selected, summary)
                 }
             }
@@ -372,10 +400,43 @@ class MergeIntoDialog(
 
     private fun showCommitSummary(branch: String, summary: BranchCommitSummary?) {
         if (summary == null) {
-            commitPreviewLabel.text = "<html><font color='gray'>No commit details available for <b>${escape(branch)}</b></font></html>"
+            divergenceLabel.icon = AllIcons.General.Warning
+            divergenceLabel.text = "<html><font color='gray'>Could not retrieve branch status for <b>${escape(branch)}</b></font></html>"
+            divergenceLabel.toolTipText = null
+            commitPreviewLabel.text = "<html><font color='gray'>No commit details available</font></html>"
             commitPreviewLabel.toolTipText = null
             return
         }
+
+        val current = currentBranchName.orEmpty()
+        val ahead = summary.ahead
+        val behind = summary.behind
+
+        when {
+            ahead == 0 && behind == 0 -> {
+                divergenceLabel.icon = AllIcons.General.InspectionsOK
+                divergenceLabel.text = "<html><b>Up to date:</b> Target branch already includes all commits from <b>${escape(current)}</b></html>"
+                divergenceLabel.toolTipText = "Target branch is at the same commit as current branch."
+            }
+            ahead > 0 && behind == 0 -> {
+                divergenceLabel.icon = AllIcons.Vcs.Merge
+                val commitStr = if (ahead == 1) "commit" else "commits"
+                divergenceLabel.text = "<html><b>$ahead $commitStr to merge</b> <font color='gray'>(fast-forward possible)</font></html>"
+                divergenceLabel.toolTipText = "Current branch is $ahead commit(s) ahead of target branch."
+            }
+            ahead > 0 && behind > 0 -> {
+                divergenceLabel.icon = AllIcons.General.Warning
+                val commitStr = if (ahead == 1) "commit" else "commits"
+                divergenceLabel.text = "<html><b>$ahead $commitStr to merge</b> &middot; <font color='#e58e00'><b>$behind behind</b></font> <font color='gray'>(branches diverged)</font></html>"
+                divergenceLabel.toolTipText = "Current branch is $ahead ahead and $behind behind target branch."
+            }
+            else -> {
+                divergenceLabel.icon = AllIcons.General.Information
+                divergenceLabel.text = "<html><b>Up to date:</b> 0 commits to merge <font color='gray'>(target has $behind newer commits)</font></html>"
+                divergenceLabel.toolTipText = "All commits from current branch are already in target branch."
+            }
+        }
+
         val displaySubject = if (summary.subject.length > 55) {
             summary.subject.take(52) + "..."
         } else {
@@ -385,29 +446,45 @@ class MergeIntoDialog(
         val escapedAuthor = escape(summary.author)
         val escapedTime = escape(summary.timeAgo)
         val escapedHash = escape(summary.hash)
-        commitPreviewLabel.text = "<html><b>Latest commit:</b> <code>$escapedHash</code> $escapedSubject <font color='gray'>&mdash; $escapedAuthor, $escapedTime</font></html>"
+        commitPreviewLabel.text = "<html><b>Latest on target:</b> <code>$escapedHash</code> $escapedSubject <font color='gray'>&mdash; $escapedAuthor, $escapedTime</font></html>"
         commitPreviewLabel.toolTipText = "${summary.hash} ${summary.subject} (${summary.author}, ${summary.timeAgo})"
     }
 
-    private fun fetchLatestCommit(repository: GitRepository, branch: String): BranchCommitSummary? {
+    private fun fetchLatestCommit(repository: GitRepository, branch: String, currentBranch: String?): BranchCommitSummary? {
         return try {
             val handler = GitLineHandler(project, repository.root, GitCommand.LOG)
             handler.addParameters("-1", "--format=%h\t%an\t%cr\t%s", branch)
             val result = Git.getInstance().runCommand(handler)
-            if (result.success()) {
-                val line = result.output.firstOrNull()?.trim().orEmpty()
-                if (line.isNotEmpty()) {
-                    val parts = line.split("\t", limit = 4)
-                    if (parts.size >= 4) {
-                        BranchCommitSummary(
-                            hash = parts[0],
-                            author = parts[1],
-                            timeAgo = parts[2],
-                            subject = parts[3]
-                        )
-                    } else null
-                } else null
-            } else null
+            if (!result.success()) return null
+            val line = result.output.firstOrNull()?.trim().orEmpty()
+            if (line.isEmpty()) return null
+            val parts = line.split("\t", limit = 4)
+            if (parts.size < 4) return null
+
+            var ahead = 0
+            var behind = 0
+            if (!currentBranch.isNullOrEmpty()) {
+                val revHandler = GitLineHandler(project, repository.root, GitCommand.REV_LIST)
+                revHandler.addParameters("--left-right", "--count", "$branch...$currentBranch")
+                val revResult = Git.getInstance().runCommand(revHandler)
+                if (revResult.success()) {
+                    val revLine = revResult.output.firstOrNull()?.trim().orEmpty()
+                    val counts = revLine.split("\\s+".toRegex())
+                    if (counts.size >= 2) {
+                        behind = counts[0].toIntOrNull() ?: 0
+                        ahead = counts[1].toIntOrNull() ?: 0
+                    }
+                }
+            }
+
+            BranchCommitSummary(
+                hash = parts[0],
+                author = parts[1],
+                timeAgo = parts[2],
+                subject = parts[3],
+                ahead = ahead,
+                behind = behind,
+            )
         } catch (_: Exception) {
             null
         }
@@ -533,6 +610,10 @@ class MergeIntoDialog(
 
     fun isPushAfterMerge(): Boolean = pushCheckBox.isSelected
 
+    fun isPullBeforeMerge(): Boolean = pullCheckBox.isSelected
+
+    fun getDivergenceText(): String = divergenceLabel.text
+
     fun getCustomCommitMessage(): String? {
         if (!isNoFF()) return null
         return commitMessageField.text.trim().takeIf { it.isNotEmpty() }
@@ -547,6 +628,7 @@ class MergeIntoDialog(
     override fun doOKAction() {
         favorites.setNoFF(isNoFF())
         favorites.setPushAfterMerge(isPushAfterMerge())
+        favorites.setPullBeforeMerge(isPullBeforeMerge())
         super.doOKAction()
     }
 

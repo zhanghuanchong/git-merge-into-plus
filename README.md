@@ -15,14 +15,16 @@ It combines the best of two existing plugins:
 - **Searchable branch picker & real-time counter** — live badge displaying total, favorite, and filtered branch counts.
 - **Favorites** — star frequently used branches (right-click a branch or click its star);
   favorites are pinned to the top of the list.
+- **Pre-merge divergence intelligence** — real-time calculation of incoming commits to merge (ahead), divergence metrics (behind), fast-forward checks, and an unambiguous *Up to date* badge.
 - **Target branch commit preview** — inspect the latest commit (hash, author, date, message) before merging.
+- **Pre-merge remote synchronization** — option to automatically update the target branch from its remote tracking branch (`git pull --ff-only`) before merging.
 - **Custom merge commit message** — optionally provide custom commit messages with `--no-ff`, falling back to Git default if blank.
 - **Remembers the last target** branch per repository.
 - **Stays on the current branch** — after merging, the plugin always checks the original branch
   back out, even when something fails (conflicts abort the merge and you're returned safely).
-- **Optional `--no-ff` merge commit** (default on) and **optional push** of the target branch.
+- **Optional `--no-ff` merge commit** (default on), **remote sync**, and **optional push** of the target branch.
 - **Multi-root projects** — choose which repository to operate on when several are mapped.
-- Lives under the **Git** menu with dedicated merge icon and keyboard shortcut.
+- **Lives under the Git menu** with dedicated merge icon and keyboard shortcut.
 
 ## Default shortcut
 

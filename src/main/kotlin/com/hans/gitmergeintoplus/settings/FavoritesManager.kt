@@ -13,6 +13,7 @@ class FavoritesManager : PersistentStateComponent<FavoritesManager.State> {
         var lastTargets: MutableMap<String, String> = HashMap()
         var noFF: Boolean = true
         var pushAfterMerge: Boolean = true
+        var pullBeforeMerge: Boolean = false
     }
 
     private var myState = State()
@@ -52,6 +53,12 @@ class FavoritesManager : PersistentStateComponent<FavoritesManager.State> {
 
     fun setPushAfterMerge(value: Boolean) {
         myState.pushAfterMerge = value
+    }
+
+    fun isPullBeforeMerge(): Boolean = myState.pullBeforeMerge
+
+    fun setPullBeforeMerge(value: Boolean) {
+        myState.pullBeforeMerge = value
     }
 
     companion object {

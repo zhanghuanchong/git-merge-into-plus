@@ -63,5 +63,22 @@ class MergeIntoActionTest : BasePlatformTestCase() {
         )
         assertEquals("Merge feat/login into dev (#1024)", trimmed)
     }
+
+    fun testBranchCommitSummaryStructure() {
+        val summary = com.hans.gitmergeintoplus.dialog.MergeIntoDialog.BranchCommitSummary(
+            hash = "a1b2c3d",
+            author = "Hans Zhang",
+            timeAgo = "2 hours ago",
+            subject = "feat: pre-merge inspection",
+            ahead = 3,
+            behind = 1
+        )
+        assertEquals("a1b2c3d", summary.hash)
+        assertEquals("Hans Zhang", summary.author)
+        assertEquals("2 hours ago", summary.timeAgo)
+        assertEquals("feat: pre-merge inspection", summary.subject)
+        assertEquals(3, summary.ahead)
+        assertEquals(1, summary.behind)
+    }
 }
 

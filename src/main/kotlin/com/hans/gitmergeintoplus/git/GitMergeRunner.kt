@@ -31,6 +31,7 @@ object GitMergeRunner {
         targetBranch: String,
         noFF: Boolean,
         push: Boolean,
+        pullBeforeMerge: Boolean = false,
         customCommitMessage: String? = null,
     ) {
         ProgressManager.getInstance().run(object :
@@ -38,7 +39,7 @@ object GitMergeRunner {
             override fun run(indicator: ProgressIndicator) {
                 indicator.isIndeterminate = true
                 indicator.text = "Preparing merge..."
-                perform(project, repository, currentBranch, targetBranch, noFF, push, customCommitMessage, indicator)
+                perform(project, repository, currentBranch, targetBranch, noFF, push, pullBeforeMerge, customCommitMessage, indicator)
             }
         })
     }
@@ -50,6 +51,7 @@ object GitMergeRunner {
         targetBranch: String,
         noFF: Boolean,
         push: Boolean,
+        pullBeforeMerge: Boolean,
         customCommitMessage: String?,
         indicator: ProgressIndicator,
     ) {
@@ -71,6 +73,29 @@ object GitMergeRunner {
                 "Could not switch to branch '$targetBranch'.\n\n" + errorText(checkout)
             )
             return
+        }
+
+        if (pullBeforeMerge) {
+            val remote = resolveRemote(repository, targetBranch)
+            if (remote != null) {
+                indicator.text = "Updating '$targetBranch' from '$remote'..."
+                val trackInfo = repository.getBranchTrackInfo(targetBranch)
+                val remoteBranch = trackInfo?.remoteBranch?.nameForRemoteOperations ?: targetBranch
+                val pullResult = runCommand(project, root, GitCommand.PULL, "--ff-only", remote, remoteBranch)
+                if (!pullResult.success()) {
+                    PluginNotifications.error(
+                        project, "Update failed",
+                        "Could not fast-forward '$targetBranch' from '$remote/$remoteBranch'.\n\n" +
+                            errorText(pullResult)
+                    )
+                    return
+                }
+            } else {
+                PluginNotifications.warning(
+                    project, "Update skipped",
+                    "No remote found for branch '$targetBranch' — update was skipped."
+                )
+            }
         }
 
         var merged = false

@@ -27,4 +27,16 @@ class MergeIntoActionTest : BasePlatformTestCase() {
             found
         )
     }
+
+    fun testPluginIsUnloadableWithoutRestart() {
+        val pluginId = com.intellij.openapi.extensions.PluginId.getId("com.hans.git-merge-into-plus")
+        val descriptor = com.intellij.ide.plugins.PluginManagerCore.getPlugin(pluginId)
+        assertNotNull("plugin descriptor must exist", descriptor)
+        val unloadReason = com.intellij.ide.plugins.DynamicPlugins.validateCanUnloadWithoutRestart(descriptor as com.intellij.ide.plugins.PluginMainDescriptor)
+        assertNull("plugin should be unloadable without restart, but failed: $unloadReason", unloadReason)
+
+        val loadReason = com.intellij.ide.plugins.DynamicPlugins.validateCanLoadWithoutRestart(descriptor)
+        assertNull("plugin should be loadable without restart, but failed: $loadReason", loadReason)
+    }
 }
+

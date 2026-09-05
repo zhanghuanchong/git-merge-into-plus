@@ -2,7 +2,7 @@
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
     <vendor>Hans Zhang</vendor>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
@@ -20,6 +20,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.1.2</h4>
+        <ul>
+            <li><b>Dynamic Plugin (Hot-Swapping) Support:</b> Fixed extension point registration so the plugin can be installed, updated, and unloaded dynamically without restarting the IDE.</li>
+            <li><b>Internal Cleanup:</b> Migrated notifications to modern <code>NotificationGroupManager</code> and added automated test for dynamic unloadability.</li>
+        </ul>
         <h4>0.1.1</h4>
         <ul>
             <li><b>Remember Merge Options:</b> Automatically saves and restores your <code>--no-ff</code> and <code>push</code> preferences (default: enabled).</li>
@@ -40,9 +45,9 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="com.hans.gitmergeintoplus.settings.FavoritesManager"/>
-        <notification-group id="gitmergeintoplus.notifications"
-                            displayType="BALLOON"
-                            isLogByDefault="true"/>
+        <notificationGroup id="gitmergeintoplus.notifications"
+                           displayType="BALLOON"
+                           isLogByDefault="true"/>
     </extensions>
 
     <actions>

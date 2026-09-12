@@ -97,5 +97,9 @@ class MergeIntoActionTest : BasePlatformTestCase() {
         val action = ActionManager.getInstance().getAction("gitmergeintoplus.MergeInto") as MergeIntoAction
         assertEquals(com.intellij.openapi.actionSystem.ActionUpdateThread.BGT, action.actionUpdateThread)
     }
+
+    fun testDialogDimensionServiceKey() {
+        assertEquals("com.hans.gitmergeintoplus.dialog.MergeIntoDialog", com.hans.gitmergeintoplus.dialog.MergeIntoDialog.DIMENSION_SERVICE_KEY)
+    }
 }
 

@@ -122,6 +122,8 @@ class MergeIntoDialog(
         updateForRepository()
     }
 
+    override fun getDimensionServiceKey(): String = DIMENSION_SERVICE_KEY
+
     data class BranchItem(val name: String, val header: Boolean, val favorite: Boolean) {
         companion object {
             fun header(text: String) = BranchItem(text, true, false)
@@ -131,6 +133,7 @@ class MergeIntoDialog(
 
     override fun createCenterPanel(): JComponent? {
         val panel = JPanel(GridBagLayout())
+        panel.minimumSize = JBUI.size(460, 320)
         val gbc = GridBagConstraints().apply {
             gridx = 0
             weightx = 1.0
@@ -184,7 +187,7 @@ class MergeIntoDialog(
             }
         })
         val scrollPane = JBScrollPane(branchList)
-        scrollPane.preferredSize = Dimension(420, 310)
+        scrollPane.preferredSize = JBUI.size(580, 320)
         panel.add(scrollPane, gbc)
 
         gbc.gridy = 4
@@ -776,4 +779,8 @@ class MergeIntoDialog(
     }
 
     override fun getPreferredFocusedComponent(): JComponent? = searchField
+
+    companion object {
+        const val DIMENSION_SERVICE_KEY = "com.hans.gitmergeintoplus.dialog.MergeIntoDialog"
+    }
 }

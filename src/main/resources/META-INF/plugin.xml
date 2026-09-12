@@ -2,7 +2,7 @@
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
     <vendor>Hans Zhang</vendor>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
@@ -20,6 +20,8 @@
             <li><b>Pre-Merge Remote Sync:</b> Optional <code>Update target branch from remote before merging</code> safely fast-forwards the target branch from its remote tracking branch prior to merging (enabled by default with instant memory).</li>
             <li><b>Target Branch Commit Preview:</b> Instant preview of the latest commit (hash, author, date, subject) on any selected target branch.</li>
             <li><b>Custom Merge Commit Message:</b> Specify an optional custom commit message when <code>--no-ff</code> is enabled; falls back to Git standard message if left blank.</li>
+            <li><b>Dialog Resizing Memory &amp; Spacious Layout:</b> Automatically remembers customized window dimensions across invocations and IDE sessions, with an expanded default width.</li>
+            <li><b>Prompt Post-Merge IDE Status Refresh:</b> Immediately updates Git repository references, working tree files, and VCS change statuses upon completion so the status bar and toolbar widgets reflect changes without delay.</li>
             <li><b>Smart Memory:</b> Remembers the last merged target branch for each repository.</li>
             <li><b>Persistent Options:</b> Remembers your <code>--no-ff</code>, <code>push</code>, and <code>pull</code> preferences across invocations.</li>
             <li><b>Safe Checkout-Back:</b> Automatically switches back to your original branch after merge, even if an error or conflict occurs.</li>
@@ -29,6 +31,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.2.1</h4>
+        <ul>
+            <li><b>Dialog Window Size Persistence &amp; Wider Default:</b> Automatically remembers customized window width and height across sessions; enlarged the default dialog width to provide a spacious view for branch names and commit messages.</li>
+            <li><b>Immediate Post-Merge IDE Status Refresh:</b> Promptly reloads Git repository references, working tree VFS files, and VCS change scopes upon completion so the status bar and toolbar branch widgets update instantly.</li>
+        </ul>
         <h4>0.2.0</h4>
         <ul>
             <li><b>Git Branches Popup Integration:</b> Integrated <code>Merge Into...</code> directly into the Git Branches popup (<code>Git.Branches.List</code>) accessed from the status bar or main navigation toolbar widget.</li>

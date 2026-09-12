@@ -20,6 +20,8 @@ It combines the best of two existing plugins:
 - **Target branch commit preview** — inspect the latest commit (hash, author, date, message) before merging.
 - **Pre-merge remote synchronization** — option to automatically update the target branch from its remote tracking branch (`git pull --ff-only`) before merging (enabled by default, with instant preference memory).
 - **Custom merge commit message** — optionally provide custom commit messages with `--no-ff`, falling back to Git standard message if blank.
+- **Window size persistence & spacious layout** — remembers customized dialog dimensions across sessions, with an expanded default width for comfortable branch browsing.
+- **Prompt IDE status synchronization** — instantly refreshes Git repository state, working tree files, and VCS change statuses upon completion so the status bar and toolbar branch widgets update without delay.
 - **Remembers the last target** branch per repository.
 - **Stays on the current branch** — after merging, the plugin always checks the original branch
   back out, even when something fails (conflicts abort the merge and you're returned safely).

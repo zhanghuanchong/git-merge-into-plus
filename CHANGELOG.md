@@ -4,6 +4,12 @@ All notable changes to **Git Merge Into Plus** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-09-05
+### Added
+- **Dialog Window Resizing Persistence**: Registered unique dimension service key (`getDimensionServiceKey()`) so custom dialog width and height adjustments are automatically remembered across invocations and IDE restarts.
+- **Spacious Default Dialog Width**: Increased default dialog width to provide ample room for long branch names, commit message inputs, and divergence status indicators.
+- **Prompt Post-Merge IDE Status Refresh**: Explicitly reloads Git repository references (`repository.update()`), working tree VFS files (`GitUtil.refreshVfsInRoot`), and VCS change scopes (`VcsDirtyScopeManager.rootDirty`) upon merge completion, ensuring status bar and toolbar branch widgets update immediately.
+
 ## [0.2.0] - 2026-09-05
 ### Added
 - **Git Branches Popup Integration**: Added `Merge Into...` directly into the top-level actions list (`Git.Branches.List`) of the Git Branches popup opened from the IDE status bar branch widget or main navigation toolbar widget.

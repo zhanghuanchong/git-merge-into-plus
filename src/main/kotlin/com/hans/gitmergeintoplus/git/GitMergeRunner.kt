@@ -7,8 +7,10 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.vcs.changes.VcsDirtyScopeManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.hans.gitmergeintoplus.ui.PluginNotifications
+import git4idea.GitUtil
 import git4idea.branch.GitBranchUtil
 import git4idea.commands.Git
 import git4idea.commands.GitCommand
@@ -176,13 +178,51 @@ object GitMergeRunner {
             val back = runCommand(project, root, GitCommand.CHECKOUT, currentBranch)
             val backSuccess = back.success()
 
+            refreshRepository(project, repository, currentBranch, targetBranches)
+
             notifyMergeResults(
                 project, currentBranch, targetBranches, successfulBranches,
                 pushedBranches, pushFailedBranches, failedBranch, failureMessage,
                 isConflict, conflictDetails, backSuccess, back
             )
+        }
+    }
 
-            GitBranchUtil.updateBranches(project, listOf(repository), emptyList())
+    internal fun refreshRepository(
+        project: Project,
+        repository: GitRepository,
+        currentBranch: String,
+        targetBranches: List<String>,
+    ) {
+        try {
+            repository.repositoryFiles.refresh()
+        } catch (t: Throwable) {
+            LOG.warn("Failed to refresh repository files", t)
+        }
+
+        try {
+            repository.update()
+        } catch (t: Throwable) {
+            LOG.warn("Failed to update repository", t)
+        }
+
+        try {
+            GitUtil.refreshVfsInRoot(repository.root)
+        } catch (t: Throwable) {
+            LOG.warn("Failed to refresh VFS in root", t)
+        }
+
+        try {
+            VcsDirtyScopeManager.getInstance(project).rootDirty(repository.root)
+        } catch (t: Throwable) {
+            LOG.warn("Failed to mark VCS root dirty", t)
+        }
+
+        try {
+            val branchesToUpdate = (listOf(currentBranch) + targetBranches).distinct()
+            GitBranchUtil.updateBranches(project, listOf(repository), branchesToUpdate)
+        } catch (t: Throwable) {
+            LOG.warn("Failed to update branches", t)
         }
     }
 

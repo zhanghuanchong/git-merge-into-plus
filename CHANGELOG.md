@@ -4,6 +4,10 @@ All notable changes to **Git Merge Into Plus** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-09-12
+### Changed
+- **Platform Compatibility & Internal API Cleanup**: Replaced internal `GitBranchActionsDataKeys.SELECTED_REPOSITORY` reference with public standard `DataKey.create<GitRepository>("Git.Selected.Repository")`, completely eliminating internal API warnings in JetBrains Plugin Verifier across IntelliJ 2026.1–2026.3+.
+
 ## [0.2.1] - 2026-09-05
 ### Added
 - **Dialog Window Resizing Persistence**: Registered unique dimension service key (`getDimensionServiceKey()`) so custom dialog width and height adjustments are automatically remembered across invocations and IDE restarts.

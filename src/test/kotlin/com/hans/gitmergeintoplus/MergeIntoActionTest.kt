@@ -101,5 +101,10 @@ class MergeIntoActionTest : BasePlatformTestCase() {
     fun testDialogDimensionServiceKey() {
         assertEquals("com.hans.gitmergeintoplus.dialog.MergeIntoDialog", com.hans.gitmergeintoplus.dialog.MergeIntoDialog.DIMENSION_SERVICE_KEY)
     }
+
+    fun testDataKeys() {
+        assertEquals("Git.Selected.Repository", MergeIntoAction.SELECTED_REPOSITORY_KEY.name)
+        assertEquals("Git.Selected.Ref", MergeIntoAction.SELECTED_REF_KEY.name)
+    }
 }
 

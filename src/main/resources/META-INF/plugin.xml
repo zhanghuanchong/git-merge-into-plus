@@ -2,7 +2,7 @@
     <id>com.hans.git-merge-into-plus</id>
     <name>Git Merge Into Plus</name>
     <vendor>Hans Zhang</vendor>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
 
     <description><![CDATA[
         Merges the <b>current branch</b> into a <b>target branch of your choice</b> and automatically
@@ -31,6 +31,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h4>0.2.2</h4>
+        <ul>
+            <li><b>Platform Compatibility &amp; API Cleanup:</b> Replaced internal <code>GitBranchActionsDataKeys</code> reference with public standard <code>DataKey</code> lookups, fully eliminating internal API warnings in JetBrains Plugin Verifier across IntelliJ 2026.1–2026.3+.</li>
+        </ul>
         <h4>0.2.1</h4>
         <ul>
             <li><b>Dialog Window Size Persistence &amp; Wider Default:</b> Automatically remembers customized window width and height across sessions; enlarged the default dialog width to provide a spacious view for branch names and commit messages.</li>

@@ -12,7 +12,6 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.DataKey
 import com.intellij.openapi.project.Project
 import git4idea.GitReference
-import git4idea.actions.branch.GitBranchActionsDataKeys
 import git4idea.branch.GitBranchUtil
 import git4idea.repo.GitRepository
 import git4idea.repo.GitRepositoryManager
@@ -109,7 +108,7 @@ class MergeIntoAction : AnAction() {
         repositories: List<GitRepository>,
     ): GitRepository {
         try {
-            dataContext.getData(GitBranchActionsDataKeys.SELECTED_REPOSITORY)?.let { return it }
+            dataContext.getData(SELECTED_REPOSITORY_KEY)?.let { return it }
         } catch (_: Throwable) {
         }
         try {
@@ -121,7 +120,7 @@ class MergeIntoAction : AnAction() {
     }
 
     internal fun getSelectedTargetBranchName(e: AnActionEvent): String? {
-        val ref = e.getData(DataKey.create<Any>("Git.Selected.Ref")) ?: return null
+        val ref = e.getData(SELECTED_REF_KEY) ?: return null
         return when (ref) {
             is GitReference -> ref.name
             else -> {
@@ -148,4 +147,9 @@ class MergeIntoAction : AnAction() {
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
+
+    companion object {
+        val SELECTED_REPOSITORY_KEY: DataKey<GitRepository> = DataKey.create("Git.Selected.Repository")
+        val SELECTED_REF_KEY: DataKey<Any> = DataKey.create("Git.Selected.Ref")
+    }
 }
